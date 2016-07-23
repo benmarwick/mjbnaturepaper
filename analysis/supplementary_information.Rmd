@@ -1,0 +1,114 @@
+---
+title: "Supplementary Information"
+author: "Ben Marwick"
+date: '`r format(Sys.Date(), "%d %b %Y")`'
+output: bookdown::html_document2
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      warning = FALSE,
+                      message = FALSE)
+# Submission preparation guidelines:
+# http://www.nature.com/nature/authors/gta/
+# Nature’s standard figure sizes are 89 mm (single column) and 183 mm (double column) and the full depth of the page is 247 mm.
+```
+
+# Introduction
+
+This document contains the R code used to generate the figures and statistical results that I contributed to
+
+Clarkson et al. XXXX 
+
+```{r}
+# prepare data, if interactive, setwd to source doc
+library(mjbnaturepaper)
+
+# read in from raw data
+total_station_data_2015 <- read_2015_total_station_data("data/total_station_csv_2015")
+total_station_data_2012 <- read_2012_total_station_data("data/total_station_csv_2012")
+
+# combine both years
+combined_2012_and_2015_total_station_data <- combine_2012_and_2015_total_station_data(total_station_data_2012,
+                                         total_station_data_2015)
+# excude points not in excavation
+points_in_main_excavation_area <- 
+extract_points_in_main_excavation_area(combined_2012_and_2015_total_station_data)
+
+# rotate points to make the excavation square
+rotated_points_in_main_excavation_area <- 
+rotate_points_in_main_excavation_area(points_in_main_excavation_area)
+
+# clean out spurious and duplicated points
+cleaned_rotated_points_in_main_excavation_area <- 
+clean_points_in_main_excavation_area(rotated_points_in_main_excavation_area)
+
+# extract only stone artefacts and related things
+stone_artefacts_only <- 
+stone_artefacts(cleaned_rotated_points_in_main_excavation_area)
+```
+
+# Main paper figures and tables
+
+Here's the code to reproduce the figures in the main paper:
+
+## Extended Data Figure 1
+
+Detailed piece plotting revealed three dense bands of artefacts at the site with less dense bands of artefacts in between.
+
+```{r}
+
+```
+
+## Extended Data Figure 2
+
+Each band corresponds to a change in raw material use and stone working technology
+
+```{r}
+
+```
+
+## Extended Data Figure 4
+
+Associations were found between 19 artefacts (lower = 17, middle = 2) indicating refits and conjoins within the lower two dense artefact layers but not between them 
+
+```{r}
+refits(stone_artefacts_only)
+```
+
+
+## Extended Data Figure 5
+
+Each pulse in artifact discard corresponds to a peak in mass-normalized magnetic susceptibility, increasing in magnitude towards the surface, and a peak in the quantity of burnt chert in the lower two bands (chert is absent in the upper band), indicating artifact pulses are probably associated with phases of intense anthropogenic burning in the shelter 
+
+```{r}
+
+
+```
+
+
+## Extended Data Figure 6
+
+Micromorphology of the excavated deposits shows aeolian and alluvial origins of predominantly lightly clay-coated rounded quartz grains, with less-weathered disaggregation and slow exfoliation from the rockshelter wall sandstone 
+
+## Extended Data Figure 10
+
+depth age and age of each artefact band, as well as first occupation
+
+ 
+## Extended Data Table 1
+
+Raw materials are predominantly quartzite, silcrete, exotic fine-grained quartzite, mudstone and dolerite (Extended Data Table 1)
+
+# Supplementary Information figures and tables:
+
+Here's the code to reproduce the figures in the Supplementary Information:
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+
+
+```{r}
+devtools::session_info()
+```
