@@ -144,6 +144,12 @@ Source: CRAN
 Version: 1.4
 Hash: b2a47a2b91737978cf50ba95825a9cd1
 
+Package: gdata
+Source: CRAN
+Version: 2.17.0
+Hash: e7d520c2a9597b303f54499e3bd90644
+Requires: gtools
+
 Package: ggplot2
 Source: CRAN
 Version: 2.1.0
@@ -171,6 +177,11 @@ Package: gtable
 Source: CRAN
 Version: 0.2.0
 Hash: cd78381a9d3fea966ac39bd0daaf5554
+
+Package: gtools
+Source: CRAN
+Version: 3.5.0
+Hash: 471b2e2452dfb30fdc1dd6f1b567925a
 
 Package: highr
 Source: CRAN
@@ -293,6 +304,12 @@ Version: 1.4.1
 Hash: 55a31e20f8a216855e138ca83756a4b0
 Requires: Rcpp, plyr, stringr
 
+Package: rioja
+Source: CRAN
+Version: 0.9-9
+Hash: 4157b8672f2e8c5f73aaf4eb7a1fbc18
+Requires: gdata, vegan
+
 Package: rmarkdown
 Source: CRAN
 Version: 1.0
@@ -345,6 +362,12 @@ Source: CRAN
 Version: 2.4-0
 Hash: bba5ea51d04faa49c57c1d41d8145781
 Requires: permute
+
+Package: viridis
+Source: CRAN
+Version: 0.3.4
+Hash: c98cc0ee11a389f397c38ddb3762880c
+Requires: ggplot2, gridExtra
 
 Package: whisker
 Source: CRAN

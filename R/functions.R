@@ -269,7 +269,7 @@ rotate_points_in_main_excavation_area <- function(extracted_points_in_main_excav
 #' @return a data frame
 #' @importFrom dplyr %>% filter
 #' @import stringr
-#' @import purrr
+#' @importFrom purrr dmap_if
 #' @import tidyr
 #' @export
 #'
@@ -473,6 +473,10 @@ clean_points_in_main_excavation_area <- function(rotated_points_in_main_excavati
 
   ts_data_both_years_PFs$dup_string <- NULL
 
+  # add depth below ground surface
+  surf <- 100.693213   # NE_SEC_TAPE_1
+  ts_data_both_years_PFs$depth_below_ground_surface <-
+   surf -  ts_data_both_years_PFs$Elevation
 
 
   return(ts_data_both_years_PFs)
@@ -497,10 +501,109 @@ stone_artefacts <- function(cleaned_rotated_points_in_main_excavation_area){
 
   want <- c("_L", "_HM", "_GS", "_AX", "_AF", "_AR")
 
-  the_points <- the_points[grepl(paste0(want, collapse = "|"),
+  the_points <- the_points[grepl(paste0(want,
+                                        collapse = "|"),
                                  the_points$Description), ]
 
+  # remove some 'find' codes that seem a bit odd
+  not_want <- c("HMB", "LV", "LFEMP", "LFEMD",
+                "LTAL", "LCAL", "LHUMP", "LHUMD",
+                "LITHC")
+
+  the_points <- the_points[!grepl(paste0(not_want,
+                                        collapse = "|"),
+                                 the_points$Description), ]
+
+  # get 'find' col populated for a few odd records
+  the_points <- na.omit(the_points)
+  # look into artefacts with no 'find'
+  the_points_no_find <-
+    rbind(the_points[is.na(the_points$find),],
+          the_points[the_points$find == "",])
+  # get last bit of desc
+  last_bit_of_desc <- sapply(the_points_no_find$code, function(i) i[length(i)])
+  # update with newly extracted 'find' data
+  the_points[the_points$Description %in% the_points_no_find$Description,]$find <-
+    gsub("[0-9]", "", last_bit_of_desc)
+
+
   return(the_points)
+
+}
+
+
+#' plot_stone_artefacts
+#'
+#' @param stone_artefacts_only
+#'
+#' @return A plot
+#' @export
+#'
+#' @import ggplot2
+#' @import dplyr
+#' @import viridis
+#' @import grid
+#'
+plot_stone_artefacts <- function(stone_artefacts_only){
+
+  # only plot one point per artefact (some artefacts have multiple total station points)
+  stone_artefacts_only_one <-
+  stone_artefacts_only %>%
+    group_by(Description, find) %>%
+    dplyr::summarise(Xnew_flipped = mean(Xnew_flipped),
+                     depth_below_ground_surface = mean(depth_below_ground_surface))
+
+
+
+  # determined by plotting row C end levels
+  row_c <- c(2.4, 1.4, 0.4, -0.6, -1.6, -2.6, -3.6)
+  row_mids <- row_c/2
+
+  p <- ggplot(stone_artefacts_only_one,
+              aes(Xnew_flipped,
+                  depth_below_ground_surface,
+                  colour = find)) +
+    geom_point(size = 0.2) +
+    scale_y_reverse(limits = c(3,0)) +
+    theme_minimal() +
+    theme(panel.grid.major.x = element_line(colour = "black")) +
+    scale_x_continuous(breaks = row_c,
+                       labels = NULL) +
+    xlab("") +
+    ylab("Depth below \nground surface (m)") +
+    scale_color_viridis(discrete=TRUE,
+                        "Artefact\ntype") +
+    guides(colour = guide_legend(override.aes = list(size = 5))) +
+    coord_equal()
+
+  row_c = c(2.4, 1.4, 0.4, -0.6, -1.6, -2.6, -3.6)
+  nums = paste0("B", 7:2)
+  row_mids <-  row_c[-length(row_c)] + diff(row_c)/2
+
+
+  for(i in 1:length(row_mids)){
+    p = p + annotation_custom(grob = textGrob(nums[i], gp=gpar(fontsize=10)),
+                              xmin =  row_mids[i],
+                              xmax =  row_mids[i],
+                              ymin = -8.5,
+                              ymax = 2)
+  }
+
+  # Code to override clipping
+  grid.newpage()
+  gt <- ggplot_gtable(ggplot_build(p))
+  gt$layout$clip[gt$layout$name=="panel"] <- "off"
+  grid.draw(gt)
+
+  # save copy
+  png("figures/stone_artefacts_SW_section.png",
+      height = 1200,
+      width = 1200*1.92,
+      res = 300,
+      antialias = "cleartype")
+  grid.draw(gt)
+  dev.off()
+
 
 }
 
@@ -653,7 +756,7 @@ refits <- function(stone_artefacts){
     coord_equal() +
     theme_minimal()
 
-  ggsave("figures/refit_elev.png", width = 15)
+  ggsave("figures/refit_elev.png", width = 15, antialias = "cleartype")
 
   # plot
   ggplot() +
@@ -678,7 +781,7 @@ refits <- function(stone_artefacts){
     coord_equal() +
     theme_minimal()
 
-  ggsave("figures/refit_plan.png", width = 15)
+  ggsave("figures/refit_plan.png", width = 15, antialias = "cleartype")
 
   # what is the distance between the two refit pieces?
   refit_data_coords_wide$refit_dists_m <-
@@ -695,7 +798,7 @@ refits <- function(stone_artefacts){
     geom_histogram() +
     theme_minimal()
 
-  ggsave("figures/refit_dists_histogram.png", width = 15)
+  ggsave("figures/refit_dists_histogram.png", width = 15, antialias = "cleartype")
 
   # what is the plunge angle of the refits?
   # compute from elevations and X (Easting.x or Xnewflipped)
@@ -759,7 +862,7 @@ refits <- function(stone_artefacts){
   # grid::grid.draw(g1)
   # grid::grid.rect(x=0,y=0,height=2, width=1.05, gp=grid::gpar(col="white"))
 
-  ggsave("figures/refits orientations.png")
+  ggsave("figures/refits orientations.png", antialias = "cleartype")
 
   ## correlation between size of arefact and distance of refit?
 
@@ -769,22 +872,22 @@ refits <- function(stone_artefacts){
 
 
 
-#' geoarchaeology
+#' prepare_geoarchaeology_data
 #'
 #' @param cleaned_rotated_points_in_main_excavation_area
 #'
 #' @return A data frame
 #' @export
 #'
-#' @import Hmisc
+#' @importFrom Hmisc approxExtrap
 #' @import dplyr
-#' @import analogue
 #' @import readxl
+
 #'
 #' @examples
-geoarchaeology <- function(cleaned_rotated_points_in_main_excavation_area){
+prepare_geoarchaeology_data <- function(cleaned_rotated_points_in_main_excavation_area){
 
-
+  options(warn=-1)
   # mag sus from KL
   mag_sus_B2 <- read.csv("data/geoarchaeology_data/Kelsey_Lowe_mag_sus_B2.csv")
   # remove the C3 stuff
@@ -820,7 +923,7 @@ geoarchaeology <- function(cleaned_rotated_points_in_main_excavation_area){
   # approx returns a list, convert to dataframe
   # we also need to extrapolate a little
   tape_depths_interp <- data.frame(do.call(cbind,
-                                           approxExtrap(tape_depths$tape,
+                                           Hmisc::approxExtrap(tape_depths$tape,
                                                         tape_depths$total_station,
                                                         n = length(xout),
                                                         xout = xout)))
@@ -856,14 +959,149 @@ geoarchaeology <- function(cleaned_rotated_points_in_main_excavation_area){
   # done with mag sus
 
   # particle size data, sand-silt-clay
+  # We have sediment columns from
+  # SW Section S (closest to mag sus samples) and
+  # SW Section Section W,
+  # NE Section, and
+  # NW Section
+  #
 
+  # This is from code I wrote for LRH
+
+  MJB_SW_S_section_particle_size <- read.csv("data/geoarchaeology_data/MJB_SW_S_section_particle_size.txt", header = FALSE, stringsAsFactors = FALSE)
+
+
+  # delete first row and first 23 columns to get only sample
+  # names, size classes and sample data. We're also removing
+  # column 25 and the very last column because they are empty
+  MJB_SW_S_section_particle_size <-
+    MJB_SW_S_section_particle_size[-1,-c(1:22, 25, ncol(MJB_SW_S_section_particle_size))]
+
+  # convert a few errant characters to numbers
+  MJB_SW_S_section_particle_size[,c(3:ncol(MJB_SW_S_section_particle_size))] <-
+    as.numeric(as.character(unlist(MJB_SW_S_section_particle_size[,c(3:ncol(MJB_SW_S_section_particle_size))])))
+
+  # reshape to long form
+  MJB_SW_S_section_particle_size_long <-
+    reshape(MJB_SW_S_section_particle_size,
+            idvar=1:2,
+            varying=list(size=colnames(MJB_SW_S_section_particle_size[seq(from=3,
+                                                 to=ncol(MJB_SW_S_section_particle_size),
+                                                 by=3)]),
+            meas=colnames(MJB_SW_S_section_particle_size[seq(from=5,
+                                    to=ncol(MJB_SW_S_section_particle_size),
+                                    by=3)])),
+            direction="long")
+  # extract just measurements, size classes and sample labels
+  size <- as.numeric(na.omit(unique(MJB_SW_S_section_particle_size_long$V26)))
+
+  measurements <-
+    MJB_SW_S_section_particle_size_long[,
+                                        c(which( colnames(MJB_SW_S_section_particle_size_long)=="V24" ),
+                                          which( colnames(MJB_SW_S_section_particle_size_long)=="V27" ) :
+                                             which( colnames(MJB_SW_S_section_particle_size_long)=="V303"))]
+
+  names(measurements) <- c("sample.id", size)
+
+  measurements_long <- tidyr::gather(measurements, variable, value, -sample.id)
+  measurements_long$variable <- as.numeric(as.character(measurements_long$variable))
+
+  # compute mean values for each sample
+  # replace the pattern of digit-digit-rs with nothing to group replicates together
+  measurements$sample.id <- gsub("[[:digit:]]-[[:digit:]]-rs", "", measurements$sample.id)
+  # get averages of multiple runs on the same sub-sample
+  measurements_means <- aggregate(. ~ sample.id, data = measurements, mean)
+
+  # reduce to sand-silt-clay
+
+  # need to transpose table so sample = column and size class = row names
+  measurements_means_t <-   data.frame(t(measurements_means), stringsAsFactors = FALSE)
+  # put sample names as col names
+  tmp <- as.vector(as.matrix(measurements_means_t[1,1:ncol(measurements_means_t)])[1,])
+  # delete row with text
+  measurements_means_t <- data.frame(measurements_means_t[-1,])
+  # create column to order values
+  measurements_means_t$size <- (as.numeric(size))
+  # order
+  measurements_means_t <- measurements_means_t[ order(-as.numeric(measurements_means_t$size)), ]
+  # convert to data frame of numeric type
+  measurements_means_t <- data.frame(apply(measurements_means_t, 2,
+                                           function(x) as.numeric(as.character(x))))
+  # delete size column, not needed anymore
+  measurements_means_t <-
+    measurements_means_t[, -which(names(measurements_means_t) == 'size'),
+                                               drop=FALSE]
+  # put colnames back on again
+  colnames(measurements_means_t) <- tmp
+  # add last size class of zero
+  measurements_means_t <-
+    rbind(measurements_means_t, c(rep(0, ncol(measurements_means_t))))
+  # add size classes as row name
+  rownames(measurements_means_t) <-
+    round(c(rev(size),0),5)
+
+  # Here we can compute sand-silt-clay %s
+  # using Wentworth classes...
+  # sand: 2000 - 62.5 um
+  # silt: 62.5 - 4 um
+  # clay: < 4 um
+
+  # add size column to subset by
+  measurements_means_t$size <-
+    as.numeric(as.character(rownames(measurements_means_t)))
+
+  sand <- colSums(measurements_means_t[ measurements_means_t$size >= 62.5
+                                        & measurements_means_t$size < 2000, ] )
+
+  silt <- colSums(measurements_means_t[ measurements_means_t$size >= 4
+                                        & measurements_means_t$size < 62.5, ] )
+
+  clay <- colSums(measurements_means_t[ measurements_means_t$size >= 0
+                                        & measurements_means_t$size < 4, ] )
+
+  # combine into one data frame
+  three_classes <- data.frame(CLAY = clay,
+                              SILT = silt,
+                              SAND = sand)
+
+  # remove size row
+  three_classes <- three_classes[-nrow(three_classes),]
+  row.names(three_classes) <- substr(row.names(three_classes), nchar(row.names(three_classes))-4,  nchar(row.names(three_classes))-1)
+
+  # put depths in a column so we can calibrate with total station depths
+  # need the depth col as character to ensure the join works
+  three_classes$tape_depths <- as.character(as.numeric(row.names(three_classes)) - 1 )
+
+  # we used the same tape as the mag sus data, so we can use that method to
+  # get total station depths
+
+  three_classes_B2_total_station <-
+    dplyr::left_join(three_classes,
+                     tape_depths_interp,
+                     by = c('tape_depths' = 'tape'))
+
+  # depth below surf from total station
+  surf <- 100.693213   # NE_SEC_TAPE_1
+
+  three_classes_B2_total_station$total_station_depth_m <- surf -
+    as.numeric(three_classes_B2_total_station$total_station)
+
+  # error in tape measure and total station
+  three_classes_B2_total_station$error <-
+    as.numeric(three_classes_B2_total_station$tape_depths) -
+    three_classes_B2_total_station$total_station_depth_m
+
+  # round depths so we can get a match
+
+  three_classes_B2_total_station$depth_below_surf <-
+    round( three_classes_B2_total_station$total_station_depth_m, 2)
 
   # done with particle size data
-  # from
+
 
   # dC13 data from Mara Page
 
-  dC13_data <- read_excel("data/geoarchaeology_data/Page_160404_CombinedResults final full.xlsx")
+  dC13_data <- readxl::read_excel("data/geoarchaeology_data/Page_160404_CombinedResults final full.xlsx")
 
   # clean_and_tidydC13_data
 
@@ -964,7 +1202,7 @@ geoarchaeology <- function(cleaned_rotated_points_in_main_excavation_area){
               1)
   C3_spit_depths_interp <-
     data.frame(do.call(cbind,
-               approxExtrap(C3_spit_depths$spit,
+               Hmisc::approxExtrap(C3_spit_depths$spit,
                C3_spit_depths$mean_depth_below_surface,
                xout = xout)))
 
@@ -1031,6 +1269,33 @@ geoarchaeology <- function(cleaned_rotated_points_in_main_excavation_area){
               d13C_depth_means_total_station,
               by = c("depths" = "total_station_depth_below_surface_rounded"))
 
+  # and now add SW-S particle size data to all of that
+  all_rows <-
+    left_join(all_rows,
+              three_classes_B2_total_station,
+              by = c("depths" = "depth_below_surf"))
+  options(warn=0)
+  return(all_rows)
+
+}
+
+
+#' plot_geoarchaeology_data
+#'
+#' @param prepared_geoarchaeology_data
+#'
+#' @return plots
+#' @export
+#'
+#' @import analogue
+#' @import lattice
+#' @importFrom latticeExtra doubleYScale
+#'
+#' @examples
+plot_geoarchaeology_data <- function(prepared_geoarchaeology_data){
+
+
+  all_rows <- prepared_geoarchaeology_data
   # straigraphic panel plot
   depth <- all_rows$depths
   all_rows$Charcoal.Litre.log <- log(all_rows$Charcoal.Litre)
@@ -1040,23 +1305,91 @@ geoarchaeology <- function(cleaned_rotated_points_in_main_excavation_area){
   plotting_data <- select(all_rows,
                           # Burnt.Earth,
                           # Heated.litre,
+                          Artefacts,
                           Burnt.Chert,
                           # Charcoal.Litre,
-                          Charcoal.Litre.log,
+                          #Charcoal.Litre.log,
                           # Charcoal.g,
                           # Artefacts.Litre,
-                          Artefacts,
                           Xlf..m.3.kg.,
-                          mean_d13C_corrected
-                          )
+                          mean_d13C_corrected,
+                          SAND,
+                          SILT,
+                          CLAY)
+
+  names(plotting_data) <- c(("Stone artefacts (n)"),
+                            ("Burnt artefacts (n)"),
+                            ("Magnetic susceptibility (SI units)"),
+                            ("d13C per mill"),
+                            ("Sand (%)"),
+                            ("Silt (%)"),
+                            ("Clay (%)"))
 
 
-plt <- Stratiplot(depth ~ .,
+  #  lowest dense artefact band at between 2.1 and 2.3m depth near the back wall
+  #  middle dense artefact band occurs between 100 and 150cm depth
+  #  upper dense artefact band occurs between 40 and 70cm depth
+
+
+  zones <- c(0.4, 1.05, # upper
+                        # middle
+             1.72, 2.3) # lower
+  zoneNames <- c("","lower\nband",
+                 "middle\nband",
+                 "upper\nband", "")
+
+
+plt1 <- analogue::Stratiplot(depth ~ .,
                   varTypes = "absolute",
+                  labelRot = 90,
                   data = plotting_data,
                   type = c("l","g"),
                   col = "black",
-                  lwd = 2)
+                  lwd = 1.5,
+                  zones = zones,
+                  zoneNames = zoneNames)
+plt1$x.scales$rot <- c(90,90)
+
+plt2 <- Stratiplot(depth ~ .,
+                   varTypes = "absolute",
+                   labelRot = 90,
+                   data = plotting_data,
+                   type = c("l","g"),
+                   col = "black",
+                   lwd = 1.5,
+                   yticks = c(0.77, 1.11, 1.75),
+                   ylab =   c(34.2, 45.3, 56.3))
+plt2$x.scales$rot <- c(90,90)
+
+
+plt3 <- latticeExtra::doubleYScale(plt1,
+                                   plt2,
+                                   add.axis=T)
+
+plt3 <- update(plt3, par.settings = simpleTheme(col = c("black", "black")))
+plt3
+
+# make space for the long titles at the top
+# https://stat.ethz.ch/pipermail/r-help/2005-September/078334.html
+trellis.par.set(theme = col.whitebg())
+lw <- list(left.padding = list(x = 0.1, units = "inches"))
+lw$right.padding <- list(x = 0.1, units = "inches")
+lh <- list(bottom.padding = list(x = 0, units = "inches"))
+lh$top.padding <- list(x = 0.15, units = "inches")
+lattice.options(layout.widths = lw, layout.heights = lh)
+
+# save a copy
+png("figures/geoarchaeology_stratigraphic_plot.png",
+    width = 4000,
+    height = 2000,
+    res = 300,
+    antialias = "cleartype")
+print(plt3)
+dev.off()
+
+# put a copy on screen
+# print(plt3)
+
 
 
 }

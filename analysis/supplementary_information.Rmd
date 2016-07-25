@@ -58,6 +58,14 @@ Here's the code to reproduce the figures in the main paper:
 Detailed piece plotting revealed three dense bands of artefacts at the site with less dense bands of artefacts in between.
 
 ```{r}
+# all squares
+plot_stone_artefacts(stone_artefacts_only)
+
+# just B and C
+stone_artefacts_only_B_C <- stone_artefacts_only[grep("B|C", stone_artefacts_only$square), ]
+plot_stone_artefacts(stone_artefacts_only_B_C)
+
+
 
 ```
 
@@ -83,7 +91,9 @@ refits(stone_artefacts_only)
 Each pulse in artifact discard corresponds to a peak in mass-normalized magnetic susceptibility, increasing in magnitude towards the surface, and a peak in the quantity of burnt chert in the lower two bands (chert is absent in the upper band), indicating artifact pulses are probably associated with phases of intense anthropogenic burning in the shelter 
 
 ```{r}
-
+prepared_geoarchaeology_data <-  
+  prepare_geoarchaeology_data(cleaned_rotated_points_in_main_excavation_area)
+plot_geoarchaeology_data(prepared_geoarchaeology_data)
 
 ```
 
@@ -95,6 +105,11 @@ Micromorphology of the excavated deposits shows aeolian and alluvial origins of 
 ## Extended Data Figure 10
 
 depth age and age of each artefact band, as well as first occupation
+
+```{r}
+
+```
+
 
  
 ## Extended Data Table 1
