@@ -4,7 +4,7 @@
 \alias{refits}
 \title{refits}
 \usage{
-refits(stone_artefacts)
+refits(stone_artefacts_only)
 }
 \arguments{
 \item{stone_artefacts}{}

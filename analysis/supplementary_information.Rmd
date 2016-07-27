@@ -21,7 +21,7 @@ This document contains the R code used to generate the figures and statistical r
 
 Clarkson et al. XXXX 
 
-```{r}
+```{r prepare_data}
 # prepare data, if interactive, setwd to source doc
 library(mjbnaturepaper)
 
@@ -58,14 +58,12 @@ Here's the code to reproduce the figures in the main paper:
 Detailed piece plotting revealed three dense bands of artefacts at the site with less dense bands of artefacts in between.
 
 ```{r}
-# all squares
+# artefacts in all squares
 plot_stone_artefacts(stone_artefacts_only)
 
-# just B and C
+# just artefacts in B and C
 stone_artefacts_only_B_C <- stone_artefacts_only[grep("B|C", stone_artefacts_only$square), ]
 plot_stone_artefacts(stone_artefacts_only_B_C)
-
-
 
 ```
 
@@ -93,6 +91,7 @@ Each pulse in artifact discard corresponds to a peak in mass-normalized magnetic
 ```{r}
 prepared_geoarchaeology_data <-  
   prepare_geoarchaeology_data(cleaned_rotated_points_in_main_excavation_area)
+
 plot_geoarchaeology_data(prepared_geoarchaeology_data)
 
 ```
@@ -107,7 +106,10 @@ Micromorphology of the excavated deposits shows aeolian and alluvial origins of 
 depth age and age of each artefact band, as well as first occupation
 
 ```{r}
+c14_ages <- get_c14_ages(cleaned_rotated_points_in_main_excavation_area)
+osl_ages <- get_osl_ages(cleaned_rotated_points_in_main_excavation_area)
 
+plot_ages_and_artefacts(osl_ages, c14_ages, stone_artefacts_only)
 ```
 
 

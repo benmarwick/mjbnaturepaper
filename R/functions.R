@@ -271,9 +271,10 @@ rotate_points_in_main_excavation_area <- function(extracted_points_in_main_excav
 #' @import stringr
 #' @importFrom purrr dmap_if
 #' @import tidyr
+#' @import readxl
 #' @export
 #'
-#' @examples
+#'
 clean_points_in_main_excavation_area <- function(rotated_points_in_main_excavation_area){
 
   # Clean data to deal with non-artefact and mis-classifications-------------
@@ -303,9 +304,14 @@ clean_points_in_main_excavation_area <- function(rotated_points_in_main_excavati
 
   email <- c(75, 131, 185, 1409, 1725, 1666)
 
-  # numbers to remove
-  remove <- c(col1, col2, col3, col4, col5, col6, email)
+  # another list from CC on 27 July 2016
+  jul_26_list <- readxl::read_excel("data/stone_artefact_data/nonartefacts.xlsx", col_names = FALSE)
+  jul_26_list_vec <- jul_26_list$X0
+  jul_26_list_HM_GS <- toupper(jul_26_list_vec[grepl("hm|gs", jul_26_list_vec)])
+  jul_26_list_L <- as.numeric(jul_26_list_vec[!grepl("hm|gs", jul_26_list_vec)])
 
+  # L numbers to remove
+  remove <- c(col1, col2, col3, col4, col5, col6, email, jul_26_list_L)
 
   # delete the very lowest putting HM and ART
 
@@ -324,11 +330,12 @@ clean_points_in_main_excavation_area <- function(rotated_points_in_main_excavati
   ts_data_both_years_PFs <- ts_data_both_years_PFs %>%
     filter(!grepl(lowest_art$Description, Description))
 
-
   # add L to them
   remove_lithics <- paste0("L", remove)
 
-  remove_stuff <- c(remove_lithics, remove_haematite)
+  remove_stuff <- c(remove_lithics,
+                    remove_haematite,
+                    jul_26_list_HM_GS)
 
   # do the actual removal
   ts_data_both_years_PFs <- ts_data_both_years_PFs %>%
@@ -492,7 +499,7 @@ clean_points_in_main_excavation_area <- function(rotated_points_in_main_excavati
 #' @return A data frame
 #' @export
 #'
-#' @examples
+#'
 stone_artefacts <- function(cleaned_rotated_points_in_main_excavation_area){
 
   the_points <- cleaned_rotated_points_in_main_excavation_area
@@ -621,12 +628,14 @@ plot_stone_artefacts <- function(stone_artefacts_only){
 #' @import ggplot2
 #' @import ggrepel
 #'
-refits <- function(stone_artefacts){
+refits <- function(stone_artefacts_only){
 
   # read in data
   refit_data <- read.csv("data/refit_data/Table_6_McNeil_Jessica_41449086_BA(Hons)_finalthesis.csv", stringsAsFactors = FALSE, header = TRUE)
   refit_data <- refit_data[-1,]
 
+  # update artefact ID after CC's check
+  refit_data[refit_data$artefact2 == " X210 B6-60 ", 5] <- "X210 B6-32"
 
   appendix_data <- read.csv("data/refit_data/Appendix McNeil_Jessica_41449086_BA(Hons)_finalthesis.csv", stringsAsFactors = FALSE)
 
@@ -651,9 +660,9 @@ refits <- function(stone_artefacts){
 
   L_nums_artefact[L_nums_artefact == "L3024.2"] <- "L3024"
 
-  artefact_L_details <- stone_artefacts[grepl(paste0(L_nums_artefact,
+  artefact_L_details <- stone_artefacts_only[grepl(paste0(L_nums_artefact,
                                                      collapse = "|"),
-                                              stone_artefacts$Description),]
+                                                   stone_artefacts_only$Description),]
 
   # Jess has D2_41 for L3024, so exclude the duplicates
   # and C4_32 for L1718
@@ -675,10 +684,11 @@ refits <- function(stone_artefacts){
 
 
   # average location for all lithics in those squares and spits
+  stone_artefacts_only$code <- NULL
 
   stone_artefacts_in_sqs <-
-  stone_artefacts %>%
-    filter(grepl(paste0(refit_data_long$artefact_sq_sp,
+    stone_artefacts_only %>%
+    dplyr::filter(grepl(paste0(refit_data_long$artefact_sq_sp,
                         collapse = "|"), Description)) %>%
     dplyr::mutate(artefact_sq_sp = paste0(square, "_", spit)) %>%
     dplyr::group_by(artefact_sq_sp) %>%
@@ -710,8 +720,8 @@ refits <- function(stone_artefacts){
                             colnames(refit_data_long_Lnums) %in%
                               names(refit_data_long_no_Lnums)]
 
-  names(refit_data_long_Lnums)
-  names(refit_data_long_no_Lnums)
+  #names(refit_data_long_Lnums)
+  #names(refit_data_long_no_Lnums)
 
   # combine into one table
   refit_data_long_coords <- rbind(refit_data_long_Lnums,
@@ -838,6 +848,7 @@ refits <- function(stone_artefacts){
 
   # sig test for orientations, these data are axial
   # Axial data are converted to angular data by multiplying by two.
+  options(warn = -1)
   refit_angle_rads <- abs(refit_angle_bidirectional) * pi/180
   refit_angle_rads_test <- circular::rayleigh.test(refit_angle_rads)
 
@@ -866,7 +877,7 @@ refits <- function(stone_artefacts){
 
   ## correlation between size of arefact and distance of refit?
 
-
+  options(warn = 0)
 
 }
 
@@ -884,7 +895,7 @@ refits <- function(stone_artefacts){
 #' @import readxl
 
 #'
-#' @examples
+#'
 prepare_geoarchaeology_data <- function(cleaned_rotated_points_in_main_excavation_area){
 
   options(warn=-1)
@@ -1172,12 +1183,12 @@ prepare_geoarchaeology_data <- function(cleaned_rotated_points_in_main_excavatio
   # Read in the other geoarch data
 
   burnt_earth_C3 <- read.csv("data/geoarchaeology_data/C3_burnt_earth_by_spit.csv")
-  heated_per_litre_C3 <- read.csv("data/geoarchaeology_data/C3_heated_per_litre_by_spit.csv")
-  burnt_chert_C3 <- read.csv("data/geoarchaeology_data/C3_burnt_chert_by_spit.csv")
+  heated_per_litre_C3 <- read.csv("data/stone_artefact_data/C3_heated_per_litre_by_spit.csv")
+  burnt_chert_C3 <- read.csv("data/stone_artefact_data/C3_burnt_chert_by_spit.csv")
   charcoal_per_litre_C3 <- read.csv("data/geoarchaeology_data/C3_charcoal_per_litre_by_spit.csv")
   charcoal_C3 <- read.csv("data/geoarchaeology_data/C3_charcoal_by_spit.csv")
-  artefacts_per_litre_C3 <- read.csv("data/geoarchaeology_data/C3_artefacts_per_litre_by_spit.csv")
-  artefacts_C3 <- read.csv("data/geoarchaeology_data/C3_artefacts_by_spit.csv")
+  artefacts_per_litre_C3 <- read.csv("data/stone_artefact_data/C3_artefacts_per_litre_by_spit.csv")
+  artefacts_C3 <- read.csv("data/stone_artefact_data/C3_artefacts_by_spit.csv")
 
   EL <-    cleaned_rotated_points_in_main_excavation_area[grepl("EL_",
                    cleaned_rotated_points_in_main_excavation_area$Description), ]
@@ -1291,7 +1302,7 @@ prepare_geoarchaeology_data <- function(cleaned_rotated_points_in_main_excavatio
 #' @import lattice
 #' @importFrom latticeExtra doubleYScale
 #'
-#' @examples
+#'
 plot_geoarchaeology_data <- function(prepared_geoarchaeology_data){
 
 
@@ -1389,6 +1400,642 @@ dev.off()
 
 # put a copy on screen
 # print(plt3)
+
+
+
+}
+
+
+
+#' get_osl_ages
+#'
+#' @param cleaned_rotated_points_in_main_excavation_area
+#'
+#' @return a data frame
+#' @export
+#'
+#' @import dplyr
+#' @import purrr
+#' @import tidyr
+#' @import docxtractr
+#'
+get_osl_ages <-  function(cleaned_rotated_points_in_main_excavation_area){
+  options(warn=-1)
+
+  ts_data_both_years_PFs <-
+    cleaned_rotated_points_in_main_excavation_area
+
+  # fix problem with OSL sample numbering -------------------------------
+
+  # from CC email 22 APril 2016
+  # sample labels are wrong for the SW_A column.
+  # They should all be one lower -
+  # so 12A should be 11A, 11A should be 10A  etc.
+  check_osl <- ts_data_both_years_PFs %>%
+    filter(type == "OSL",
+           square == "SW",
+           grepl("A", spit)) %>%
+    separate(spit, c("spit_number, spit_letter"),  sep = -2, remove = FALSE)
+
+  # same
+  check_osl <- ts_data_both_years_PFs %>%
+    filter (grepl("OSL", Description) &
+              grepl("SW", Description)  &
+              grepl("A", Description)) %>%
+    separate(spit, c("spit_number, spit_letter"),  sep = -2, remove = FALSE)
+
+  # function that takes col, splits alpha-num, subtracts one from the num, and pastes them back together
+  my_fn <- function(x){
+    split_ <- separate(x, spit, c("spit_number", "spit_letter"),  sep = -2, remove = FALSE)
+    # subtract one from the OSL number
+    split_$spit_number <-  as.numeric(split_$spit_number) - 1
+    # remake OSL sample ID with -1
+    split_$spit <- NULL
+    split_ <- unite(split_, spit, spit_number, spit_letter, sep ="")
+    return(split_$spit)
+  }
+
+  # select the cols and rows to change
+
+  # we also need to update the description.
+  # looking at ZJ's word doc of tables
+  # ZJ has SW2A-11, 13A and 14A: no twelve!
+  # I have SW3A-13A: no 14!
+  # our 1-12 are one off
+
+  conditions <- (with(ts_data_both_years_PFs, # conditions
+                      grepl("OSL", Description) &
+                        grepl("SW", Description)  &
+                        grepl("A", Description) &
+                        grepl(paste0("_", 1:12, "A", collapse = "|"), Description) ))
+
+  # check
+  # ts_data_both_years_PFs[ conditions, ]
+  # check
+  # sum(conditions)
+
+  # first update desc
+
+  ts_data_both_years_PFs$Description <-
+    ifelse(conditions,
+           paste0("OSL_SW_",
+                  my_fn(ts_data_both_years_PFs)),
+           ts_data_both_years_PFs$Description)
+
+  # second update spit.
+  # the ifelse function that selects the desired rows of the desired column, and changes them
+  ts_data_both_years_PFs$spit <- ifelse(conditions, my_fn(ts_data_both_years_PFs), ts_data_both_years_PFs$spit)
+
+  # check, 'code' col holds original values
+  # ts_data_both_years_PFs[ conditions, ]
+
+
+  ### extract OSL points from Total station data --------------------------
+  # OSL sample spits and squares --------------------------------------------
+
+  # find the squares and spits for each OSL sample
+
+  # extact OSL points
+  OSL_and_micromorph <- c("OSL", "MM", "GAMMA")
+  OSL_and_micromorph <- ts_data_both_years_PFs[grepl(paste(OSL_and_micromorph, collapse = "|"), ts_data_both_years_PFs$Description),]
+
+  osl_points <- OSL_and_micromorph[grepl("OSL", OSL_and_micromorph$Description), ]
+  end_levels <-
+    ts_data_both_years_PFs[grepl("EL_", ts_data_both_years_PFs$Description),]
+
+  end_levels$Description <- gsub(" ", "", end_levels$Description)
+  gamma_points <- OSL_and_micromorph[grepl("GAMMA", OSL_and_micromorph$Description), ]
+
+  # what are the spits associated with the 2012 OSL column on the SW section?
+  # depths measured from surface, sampling started at bottom on MM1
+  osl_column <-  read.csv("data/ages/MKII_2012_OSL_column_SW_section.csv")
+
+  # seperate out upper and lower depths per sample
+
+  osl_column_depths <- osl_column %>%
+    separate(Depth, c("upper_depth", "lower_depth"), sep = "-") %>%
+    dplyr::mutate_at(matches("depth"), as.numeric)
+
+  # get total station point for MM1 of 2012
+  mm1_2012 <- ts_data_both_years_PFs %>% filter(grepl("MM1", Description), year == "2012")
+  # find lowest points
+  mm1_2012_lowest <- mm1_2012 %>% slice(which.min(Elevation))
+
+  # set the depth of the first sample to the mm1 depth, and calibrate the rest of the osl sample depths to that
+  # ZJ's depth values increase with depth, but our total station values decrease with increasing depth...
+  offset <- mm1_2012_lowest$Elevation + osl_column_depths$upper_depth[1]/100
+  osl_column_depths_elevation <- data.frame(Sample = osl_column_depths$Sample,
+                                            upper = -(osl_column_depths$upper_depth/100) + offset,
+                                            lower = -osl_column_depths$lower_depth/100 + offset)
+  # compute a mid-point for the osl sample depths
+  osl_column_depths_elevation$Elevation <- with(osl_column_depths_elevation, (upper + (lower - upper)/2))
+
+  # We'll arbitratily give the OSL column samples the same E and N
+  # as the first gamma spec point, since the gamma points are in the
+  # same column, and use the depths that we
+  # computed from the MM1 location
+  first_gamma <- gamma_points %>% filter(grepl("SW_SECT_GAMMA-1", Description))
+  osl_column_depths_elevation_grid <- cbind(osl_column_depths_elevation, first_gamma[, c(2, 3, 5:10)])
+
+  # so that gives us the depths of the OSL samples from the column.
+
+  # now we can add these osl column points on the rest of the OSL points...
+  all_osl_points <- full_join(osl_column_depths_elevation_grid, osl_points)
+  all_osl_points$type <-  "OSL"
+
+ # read in OSL dates from ZJ's word doc
+  # these were delivered by ZJ in a series of tables in a Word doc.
+  # LEts try to extract the tables from her word doc, using
+  # https://github.com/hrbrmstr/docxtractr
+
+  OSL_Data_tables_all_samples <- docxtractr::read_docx("data/ages/Data tables_all samples(250616)docx ZJ.docx")
+
+  OSL_Data_tables_all_samples_tables <- docx_extract_all_tbls(OSL_Data_tables_all_samples)
+  # combine tables into one big one
+  OSL_Data_tables_all_samples_table <- do.call(rbind, OSL_Data_tables_all_samples_tables)
+  # fix names
+  names(OSL_Data_tables_all_samples_table) <-
+    c("Sample",
+      "Depth below surface (m)",
+      "Water (%)",
+      "EDR_Beta",
+      "EDR_Gamma",
+      "EDR_Cosmic",
+      "EDR_total",
+      "De value (Gy)",
+      "Number of grains",
+      "OD (%)",
+      "Age (ka)")
+
+  # get total station coods for these samples
+  # make a col to match with
+  all_osl_points$Description_short <- gsub("_", "", all_osl_points$Description)
+  # make it match the IDs in the table from ZJ
+  remove_me <- c("OSL", "B5", "B6")
+  all_osl_points$Description_short <-
+    gsub(paste0(remove_me, collapse = "|"), "",
+         all_osl_points$Description_short)
+
+  # join the ts points to the dates
+  OSL_Data_tables_all_samples_table_ts_points <-
+    left_join(OSL_Data_tables_all_samples_table,
+              all_osl_points,
+              by = c("Sample" = "Description_short"))
+
+  # add depth below surf
+  surf <- 100.693213   # NE_SEC_TAPE_1
+  OSL_Data_tables_all_samples_table_ts_points$total_station_depth_below_surf <-
+    OSL_Data_tables_all_samples_table_ts_points$Elevation - surf
+
+
+  # compare these to the depths in ZJ's table (from me originally)
+  # cbind(OSL_Data_tables_all_samples_table_ts_points$total_station_depth_below_surf , OSL_Data_tables_all_samples_table_ts_points$`Depth below surface (m)` )
+
+  # excellent match, but we're missing:
+  # all NE samples, SW14A, NE1C, SW8C
+  # missing <- c("SW14A", "NE1C")
+  # all_osl_points[grep(paste0(missing, collapse = "|"), all_osl_points$Description_short), ]
+  # lost forever
+
+  # get her NE sample depths, since we don't have points for those
+  OSL_Data_tables_all_samples_table_ts_points$total_station_depth_below_surf <- as.numeric(
+    ifelse(is.na(OSL_Data_tables_all_samples_table_ts_points$total_station_depth_below_surf),
+           OSL_Data_tables_all_samples_table_ts_points$`Depth below surface (m)`,
+           OSL_Data_tables_all_samples_table_ts_points$total_station_depth_below_surf))
+
+  # what about XY for the NE?
+  # get it from the QGIS project in
+  # E:\My Documents\My UW\Research\1206 M2 excavation\Section photos
+  osl_ne <- read.csv("data/ages/NE_section_from_QGIS_points.csv")
+  osl_ne$NE_OSL_num <- paste0("NE", osl_ne$NE_OSL_num, "$") # exclude NE1C
+  names(osl_ne) <-  c("Xnew_flipped", "Elevation", "id", "Sample")
+
+  # update ZJ's table with data from QGIS
+  OSL_Data_tables_all_samples_table_ts_points$Sample_dollar <-  paste0(OSL_Data_tables_all_samples_table_ts_points$Sample, "$")
+
+  match_idx <-   match(osl_ne$Sample,
+                       OSL_Data_tables_all_samples_table_ts_points$Sample_dollar)
+
+  OSL_Data_tables_all_samples_table_ts_points$Elevation[match_idx] <-  osl_ne$Elevation
+
+  OSL_Data_tables_all_samples_table_ts_points$Xnew_flipped[match_idx] <-  osl_ne$Xnew_flipped
+
+  OSL_Data_tables_all_samples_table_ts_points$total_station_depth_below_surf[match_idx] <-  osl_ne$Elevation - surf
+
+  OSL_Data_tables_all_samples_table_ts_points$Sample_dollar <- NULL
+
+  # remove empty rows
+  OSL_Data_tables_all_samples_table_ts_points <-
+    OSL_Data_tables_all_samples_table_ts_points[OSL_Data_tables_all_samples_table_ts_points$Sample != "", ]
+
+  # put age and error in separate cols
+  OSL_Data_tables_all_samples_table_ts_points$osl_age <-
+    as.numeric(gsub(" .*$", "", OSL_Data_tables_all_samples_table_ts_points$`Age (ka)`))
+  OSL_Data_tables_all_samples_table_ts_points$osl_error <-
+   as.numeric(gsub(".*± ", "", OSL_Data_tables_all_samples_table_ts_points$`Age (ka)`))
+
+  # these are ready for plotting!
+  OSL_Data_tables_all_samples_table_ts_points$code <- NULL
+  write.csv(OSL_Data_tables_all_samples_table_ts_points, "data/ages/OSL_Data_tables_all_samples_table_ts_points.csv")
+
+  options(warn=0)
+  return(OSL_Data_tables_all_samples_table_ts_points)
+
+
+}
+
+
+
+#' get_c14_ages
+#'
+#' @param cleaned_rotated_points_in_main_excavation_area
+#'
+#' @return
+#' @export
+#'
+#' @import tidyr
+#' @import Bchron
+#'
+get_c14_ages <- function(cleaned_rotated_points_in_main_excavation_area){
+
+
+  ts_data_both_years_PFs <-  cleaned_rotated_points_in_main_excavation_area
+  # depths of all the C14 dates that ZJ has (from her 14C results_Malakunanja II_2014 and 2016 results for Zen.xlsx)
+
+  all_the_c14_dates <- read.csv("data/ages/14C results_Malakunanja II_2014 and 2016 results for Zen.csv")
+
+  # edit depth of E3_5A_SF20, whic ZJ noticed is probably too deep, replace with mean spit depth
+  # extract end levels and depth
+  EL_E3_5A_mean_elev <- mean(ts_data_both_years_PFs[grepl("EL_E3_5A", ts_data_both_years_PFs$Description),]$Elevation)
+  EL_E3_5A_mean_depth <- mean(ts_data_both_years_PFs[grepl("EL_E3_5A", ts_data_both_years_PFs$Description),]$depth_below_ground_surface)
+
+   # replace in total station points
+  ts_data_both_years_PFs[grepl("E3_5A_SF20", ts_data_both_years_PFs$Description),]$Elevation <- EL_E3_5A_mean_elev
+  ts_data_both_years_PFs[grepl("E3_5A_SF20", ts_data_both_years_PFs$Description),]$depth_below_ground_surface <- EL_E3_5A_mean_depth
+
+
+
+  # remove C14X bit that:
+  # is before a -
+  # is before a space
+  # is after a space
+  # really, we just have C14X plus a few digits, then space or -
+  # so, remove 'word' beginning with C14X
+  patterns <- c("C14X\\w+ *", "-", " ")
+  all_the_c14_dates$c14_square_and_spit <- gsub(paste0(patterns, collapse = "|"), "", all_the_c14_dates$Sample.ID)
+
+  # deal with the SF## samples by splitting them up
+  all_the_c14_dates$SF <- ifelse(grepl("SF", all_the_c14_dates$Sample.ID),  gsub(".*SF", "", all_the_c14_dates$Sample.ID), 0)
+
+  all_the_c14_dates$c14_square_and_spit <- gsub("SF.*", "", all_the_c14_dates$c14_square_and_spit)
+
+  all_the_c14_dates$c14_square_and_spit <- gsub("/", "_", all_the_c14_dates$c14_square_and_spit)
+
+
+  # get just the c14X code and the c14 number
+  all_the_c14_dates$c14_sample_code <- gsub(".*(C14X\\w+).*$", "\\1", all_the_c14_dates$Sample.ID)
+  all_the_c14_dates$c14_sample_code_num <- as.numeric(gsub("C14X", "", all_the_c14_dates$c14_sample_code))
+
+  # split into square and spit
+  all_the_c14_dates <- tidyr::separate(all_the_c14_dates, c14_square_and_spit, c("square", "spit"), sep = "_")
+  all_the_c14_dates$square_spit <- with(all_the_c14_dates,
+                                        paste0(square, "_", spit, "_"))
+
+  all_the_c14_dates$c14_sample_code_num <-
+    paste0("X", all_the_c14_dates$c14_sample_code_num)
+
+  # first look for C14X## matches in the total station points...
+
+  all_the_c14_dates$c14_sample_code_num <- gsub("^X4$", "X_4", all_the_c14_dates$c14_sample_code_num)
+
+  c14x_matches <-
+    ts_data_both_years_PFs[grep(
+      paste0(
+        paste0(all_the_c14_dates$c14_sample_code_num, "$"),
+        collapse ="|"),
+      ts_data_both_years_PFs$Description),]
+
+  c14x_matches_summary <-
+    c14x_matches %>%
+    group_by(Description) %>%
+    summarize_if(is.numeric, mean)
+
+  c14x_matches_summary$to_match <- paste0("X",
+                                          gsub(".*X", "", c14x_matches_summary$Description))
+
+  all_the_c14_dates$to_match <- all_the_c14_dates$c14_sample_code_num
+  all_the_c14_dates$to_match <- gsub("^X4$", "X_4", all_the_c14_dates$to_match)
+
+  # second look for the SF matches... need to be careful about this because it seems like SF has two sets of numbers
+
+  # all_the_c14_dates$square_spit
+  all_the_c14_dates$tmp <- paste0(all_the_c14_dates$square_spit, paste0("SF", all_the_c14_dates$SF))
+
+  want <- sort(all_the_c14_dates$tmp[!grepl("SF0", all_the_c14_dates$tmp)]) # 8
+
+  have <- sort(gsub("PF_", "", unique(ts_data_both_years_PFs$Description[grepl(paste0(all_the_c14_dates$tmp, collapse = "|"), ts_data_both_years_PFs$Description)]))) # 6
+
+  # what are we missing?
+  # want[!want %in% have]
+  # want "C4_9A_SF16"   only have  PF_C4_9_SF16
+  # want "D3_16B_SF33"  only have  PF_D3_16_SF33
+
+  # deal with it:
+  all_the_c14_dates$tmp <- ifelse(all_the_c14_dates$tmp == "C4_9A_SF16",
+                                  "C4_9_SF16",
+                                  all_the_c14_dates$tmp)
+  all_the_c14_dates$tmp <- ifelse(all_the_c14_dates$tmp == "D3_16B_SF33",
+                                  "D3_16_SF33",
+                                  all_the_c14_dates$tmp)
+
+
+
+  sf_matches <-
+    ts_data_both_years_PFs[grep(
+      paste0(
+        all_the_c14_dates$tmp,
+        collapse ="|"),
+      ts_data_both_years_PFs$Description),]
+
+  # we have points for each SF, so we just need the mean location
+  sf_matches_summary <-
+    sf_matches %>%
+    group_by(Description) %>%
+    summarize_if(is.numeric, mean)
+
+  sf_matches_summary$to_match <-
+    gsub("PF_", "", sf_matches_summary$Description)
+
+  all_the_c14_dates$to_match <-
+    ifelse(all_the_c14_dates$to_match == "XNA",
+           all_the_c14_dates$tmp,
+           all_the_c14_dates$to_match)
+
+  ## join it all up
+  all_points <- rbind(c14x_matches_summary, sf_matches_summary)
+
+  # bind back to C14 data
+  all_the_c14_dates <-
+    left_join(all_the_c14_dates,
+              all_points,
+              by = "to_match")
+
+  # remove dups
+  all_the_c14_dates <- all_the_c14_dates[!duplicated(all_the_c14_dates$Sample.ID),]
+
+  # don't care if no age
+  all_the_c14_dates <-
+    all_the_c14_dates %>%
+    filter(!is.na(Median))
+
+  surf <- 100.693213   # NE_SEC_TAPE_1
+  all_the_c14_dates$depth_below_surface <- all_the_c14_dates$Elevation - surf
+
+  # because I'm not sure how the calibrations are done, I'll do it again myself
+  # compute 95 credible interval cf. https://github.com/andrewcparnell/Bchron/issues/1
+  c14_ages <- as.numeric(as.character(all_the_c14_dates$Mean.14C.Age..BP. ))
+  c14_errors <- as.numeric(as.character(all_the_c14_dates$X1..14C.Age..BP.))
+
+
+  ages_cal <- Bchron::BchronCalibrate(ages=c14_ages,
+                             ageSds=c14_errors,
+                             calCurves=rep('intcal13', length(c14_ages)))
+  # First create age samples for each date
+  age_samples = Bchron::SampleAges(ages_cal)
+  # Now summarise them with quantile - this gives a 95% credible interval
+  credible_ints <- apply(age_samples,2,quantile,prob=c(0.025,0.975))
+
+  all_the_c14_dates$Bchron_95perc_cred_int_2.5 <- unname(credible_ints[1, ])
+  all_the_c14_dates$Bchron_95perc_cred_int_97.5 <- unname(credible_ints[2, ])
+
+  # midpoint of 95% credible interval
+  all_the_c14_dates$Bchron_Median <- with(all_the_c14_dates,
+                                          Bchron_95perc_cred_int_2.5 +
+                                            (Bchron_95perc_cred_int_97.5 -
+                                               Bchron_95perc_cred_int_2.5) / 2)
+
+
+  C14_sample_depths_and_spit_depths <- all_the_c14_dates
+
+  write.csv(C14_sample_depths_and_spit_depths, "data/ages/MKII_both_years_C14_samples_and_depths.csv")
+
+  return(C14_sample_depths_and_spit_depths)
+
+}
+
+
+#' plot_ages_and_artefacts
+#'
+#' @param get_osl_ages
+#' @param get_c14_ages
+#' @param stone_artefacts_only
+#'
+#' @return
+#' @export
+#'
+#' @import purrr
+#' @import dplyr
+#' @import ggpmisc
+#' @import viridis
+#' @import grid
+#' @import ggrepel
+#'
+plot_ages_and_artefacts <- function(osl_ages, c14_ages, stone_artefacts_only){
+
+
+  wanted <- "B3|B4|B5|C3|C4|C5|D3|D4|D5|E3|E4|E5"
+
+  wanted_c14_sample_depths_and_spit_depths <-
+    c14_ages %>%
+    filter(grepl(wanted, Description))
+
+  wanted_osl_ages_and_description <-
+    osl_ages %>%
+    filter(grepl("NW|SW", Description))
+
+  # biplot
+  wanted_C14 <-
+    wanted_c14_sample_depths_and_spit_depths %>%
+    select(Lab.ID, Sample.ID,  Bchron_Median, Elevation) %>%
+    mutate(age = Bchron_Median/1000,
+           Description = paste0(Lab.ID, " (", Sample.ID, ")"),
+           method = "C14") %>%
+    ungroup %>%
+    select(-one_of(c('Lab.ID', 'Sample.ID', 'Bchron_Median')))
+
+
+  wanted_OSL <-
+    wanted_osl_ages_and_description %>%
+    select(Description, `Age (ka)`, Elevation)  %>%
+    mutate(method = "OSL",
+           age = as.numeric(gsub(" ±.*$","", `Age (ka)`))) %>%
+    select(-`Age (ka)`)
+
+  wanted_C14_and_OSL <- rbind(wanted_C14, wanted_OSL)
+  surf <- 100.693213   # NE_SEC_TAPE_1
+  wanted_C14_and_OSL$depth_below_surface <-  -(wanted_C14_and_OSL$Elevation - surf)
+
+  # investigate the distributions ----------------------------------------------------
+
+  # draw plot with equations
+
+  formula <- y ~ poly(x, 2)
+
+  excluding <- c("Wk43605", # pit feature
+                 #"Wk43606",
+                 #"Wk43607",
+                 #"Wk43610",
+                 #"Wk43604",
+                 #"Wk43611",
+                 #"OZT591",
+                 "OZT593")
+
+  # exclude some points
+  wanted_C14_and_OSL_plot_excluding <-
+    wanted_C14_and_OSL %>%
+    filter(!grepl(paste0(excluding, collapse ="|"), Description))
+
+  # compute polynomial regression
+  wanted_both_methods_model <- lm(age ~
+                                   poly(depth_below_surface, 2),
+                                 data = na.omit(wanted_C14_and_OSL_plot_excluding))
+  # poly 2 is a very good fit
+
+  # text size for labels
+  size <- 2
+  depth_age_biplot <-
+    ggplot() +
+    geom_smooth(data = wanted_C14_and_OSL_plot_excluding, # exclude some from curve fit
+                aes(depth_below_surface,
+                    age,
+                    group = method,
+                    colour = method),
+                method = "lm",
+                formula = formula,
+                fullrange=TRUE,
+                fill = viridis(1),
+                alpha = 0.1) +
+    geom_point(data = wanted_C14_and_OSL, # plot all points
+               aes(depth_below_surface,
+                   age,
+               group = method,
+               colour = method)) +
+    stat_poly_eq(data = wanted_C14_and_OSL_plot_excluding, # exclude some from curve fit
+                 aes(label = ..eq.label..), formula = formula,
+                 parse = TRUE) +
+    geom_text_repel(data = wanted_C14_and_OSL,
+                    aes(x = depth_below_surface,
+                        y = age),
+                    colour = 'black',
+                    size = size,
+                    label = wanted_C14_and_OSL$Description) +
+    annotate("text", x = 2.8,
+             y = 10,
+             label = paste0("Curve fit \nexcludes:\n",
+                            paste0(excluding, collapse = "\n")),
+             size = 2) +
+    theme_minimal(base_size = 14) +
+    scale_color_viridis(discrete=TRUE,
+                        begin =0,
+                        end= 1,
+                        option = "viridis") +
+    scale_fill_viridis() +
+    xlab("Depth below surface (m)") +
+    ylab("Age (ka)") +
+    # ggtitle(paste0("MJB depth-age plot of C14 and OSL dates \nfrom ",  gsub("\\|", ", ", wanted))) +
+    theme(legend.position = c(0, 1),
+          legend.justification = c(0, 1),
+          legend.background = element_rect(colour = NA, fill = "white"),
+          legend.key = element_rect(colour = NA, fill = "white")) +
+    xlim(c(0,3))
+
+  depth_age_biplot
+
+  filename_ <- paste0("figures/depth_age_plot_of_C14_an_OSL_dates_from ", gsub("\\|", " ", wanted), ".png")
+
+  ggsave(filename_,  width = 10, height = 10)
+
+  # Plot lithic histogram ------------------------------------------------------------
+
+  wanted_Lithics <- stone_artefacts_only[grepl(wanted, stone_artefacts_only$Description), ]
+  wanted_Lithics$depth_below_surface <- - (wanted_Lithics$Elevation - surf)
+
+  artefact_pulses <- c(0.05, 0.7, 1, 1.5, 2.15, 2.6)
+
+  lithics_depth <- ggplot(wanted_Lithics,
+                          aes(depth_below_surface)) +
+    geom_histogram(binwidth = 0.05) +
+    theme_minimal(base_size = 14) +
+    theme(aspect.ratio = 0.7) +
+    xlim(c(0,3)) +
+    geom_vline(xintercept=artefact_pulses,
+               colour = "red",
+               linetype="dotted",
+               size = 1) +
+  xlab("Depth below surface (m)") +
+  ylab("Number of artefacts")  # +
+    # ggtitle(paste0("Plotted lithics \nfrom ",  gsub("\\|", ", ", wanted)))
+
+  lithics_depth
+
+  filename_ <- paste0("figures/histogram_stone_artefacts_by_depth_from ", gsub("\\|", " ", wanted), ".png")
+
+  ggsave(filename_,  width = 10, height = 10)
+
+  # combine depth-age plot and lithic plot ------------------------------------------------
+
+  # interpolate ages using age model fit of both c14 and OSL
+  ages_of_pulses <- unname(predict(wanted_both_methods_model,
+                                   data.frame(depth_below_surface = artefact_pulses)))
+
+  # update age-depth plot with lines indicating pulses
+  depth_age_biplot_ <-
+    depth_age_biplot +
+    theme(aspect.ratio = 1) +
+    annotate("segment",
+             x = 0,
+             y = ages_of_pulses,
+             xend = artefact_pulses,
+             yend = ages_of_pulses,
+             colour = "red",
+             linetype="dotted",
+             size = 1) +
+    annotate("segment",
+             x = artefact_pulses,
+             y = 0,
+             xend = artefact_pulses,
+             yend = ages_of_pulses,
+             colour = "red",
+             linetype="dotted",
+             size = 1) +
+    annotate("text",
+             x = 0,
+             y = ages_of_pulses + 2.5,
+             label = paste0(round(ages_of_pulses, 1), " ka"),
+             size = 3) +
+    theme(plot.margin = unit(c(1,3,1,1), "lines"))
+
+  # combine age-depth and artefacts
+  grid.newpage()
+  grid.draw(rbind(ggplotGrob(depth_age_biplot_),
+                  ggplotGrob(lithics_depth),
+                  size = "first"))
+
+  # save a copy
+
+  dev.off()
+  png(file = "figures/depth_age_plot_with_artefact_bands.png",
+      width = 1600,
+      height = 3200,
+      res = 300,
+      #antialias = "cleartype")
+      type="cairo")
+  grid::grid.draw(rbind(ggplot2::ggplotGrob(depth_age_biplot_),
+                        ggplot2::ggplotGrob(lithics_depth),
+                  size = "first"))
+ dev.off()
+
+
 
 
 
