@@ -201,7 +201,7 @@ extract_points_in_main_excavation_area <- function(combined_2012_and_2015_total_
     filter(Easting > 4995, Northing < 5015)
 
 # get only labelled finds and other points of interest
-  excavation_area <- c("PF", "NAIL", "OSL", "EL", "P", "PL", "GAMMA", "MM", "SL")
+  excavation_area <- c("PF", "NAIL", "OSL", "EL", "P", "PL", "GAMMA", "MM", "SL", "SEC", "SECT")
 
   ts_data_both_years_PFs <- combined_2012_and_2015_total_station_data_inside %>%
     filter(grepl(paste(excavation_area, collapse = "|"), Description) )
@@ -565,12 +565,50 @@ plot_stone_artefacts <- function(stone_artefacts_only){
   # determined by plotting row C end levels
   row_c <- c(2.4, 1.4, 0.4, -0.6, -1.6, -2.6, -3.6)
   row_mids <- row_c/2
+  size = 3
 
-  p <- ggplot(stone_artefacts_only_one,
-              aes(Xnew_flipped,
-                  depth_below_ground_surface,
-                  colour = find)) +
-    geom_point(size = 0.2) +
+  p <- ggplot() +
+    geom_point(data = stone_artefacts_only_one[stone_artefacts_only_one$find == "L", ],
+               aes(Xnew_flipped,
+                   depth_below_ground_surface),
+                colour = viridis(6)[1],
+                size = size-2.5) +
+    geom_point(data = stone_artefacts_only_one[stone_artefacts_only_one$find == "HM", ],
+               aes(Xnew_flipped,
+                   depth_below_ground_surface),
+               colour = viridis(6)[2],
+               size = size-2)  +
+    geom_point(data = stone_artefacts_only_one[stone_artefacts_only_one$find == "GS", ],
+               aes(Xnew_flipped,
+                   depth_below_ground_surface),
+               colour = viridis(6)[3],
+               size = size-1.5)  +
+    geom_point(data = stone_artefacts_only_one[stone_artefacts_only_one$find == "AXE", ],
+               aes(Xnew_flipped,
+                   depth_below_ground_surface),
+               colour = viridis(6)[4],
+               size = size-1)  +
+    geom_point(data = stone_artefacts_only_one[stone_artefacts_only_one$find == "ART", ],
+               aes(Xnew_flipped,
+                   depth_below_ground_surface),
+               colour = "white",
+               size = size + 0.5) +
+    geom_point(data = stone_artefacts_only_one[stone_artefacts_only_one$find == "ART", ],
+               aes(Xnew_flipped,
+                   depth_below_ground_surface),
+               colour = viridis(6)[5],
+               size = size)  +
+    geom_point(data = stone_artefacts_only_one[stone_artefacts_only_one$find == "AF", ], # halo
+               aes(Xnew_flipped,
+                   depth_below_ground_surface),
+               colour = "white",
+               size = size + 0.5) +
+    geom_point(data = stone_artefacts_only_one[stone_artefacts_only_one$find == "AF", ],
+               aes(Xnew_flipped,
+                   depth_below_ground_surface),
+               colour = viridis(6)[6],
+               size = size)  +
+
     scale_y_reverse(limits = c(3,0)) +
     theme_minimal() +
     theme(panel.grid.major.x = element_line(colour = "black")) +
@@ -1966,7 +2004,7 @@ plot_ages_and_artefacts <- function(osl_ages, c14_ages, stone_artefacts_only){
                           aes(depth_below_surface)) +
     geom_histogram(binwidth = 0.05) +
     theme_minimal(base_size = 14) +
-    theme(aspect.ratio = 0.7) +
+    theme(aspect.ratio = 1.61803/1) +
     xlim(c(0,3)) +
     geom_vline(xintercept=artefact_pulses,
                colour = "red",
