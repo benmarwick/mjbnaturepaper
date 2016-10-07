@@ -51,11 +51,13 @@ stone_artefacts(cleaned_rotated_points_in_main_excavation_area)
 
 # Main paper figures and tables
 
-Here's the code to reproduce the figures in the main paper:
+Here's the code to reproduce the figures in the main paper that I'm involved in:
 
-## Extended Data Figure 1
+## Extended Data Figure 4
 
-Detailed piece plotting revealed three dense bands of artefacts at the site with less dense bands of artefacts in between.
+The artefacts occur in three dense bands. Detailed piece plotting revealed three dense bands of artefacts at the site with less dense bands of artefacts in between. 
+
+Each band corresponds to a change in raw material use and stone working technology
 
 ```{r}
 # artefacts in all squares
@@ -65,26 +67,29 @@ plot_stone_artefacts(stone_artefacts_only)
 stone_artefacts_only_B_C <- stone_artefacts_only[grep("B|C", stone_artefacts_only$square), ]
 plot_stone_artefacts(stone_artefacts_only_B_C)
 
-```
+spit_depths_B6_output <- spit_depths_B6(points_in_main_excavation_area)
+raw_materials_technology_plots(B6_raw_materials, spit_depths_B6_output)
 
-## Extended Data Figure 2
-
-Each band corresponds to a change in raw material use and stone working technology
-
-```{r}
+# These plots are arranged in inkscape to create the final figure
 
 ```
 
-## Extended Data Figure 4
 
-Associations were found between 19 artefacts (lower = 17, middle = 2) indicating refits and conjoins within the lower two dense artefact layers but not between them 
+
+
+## Extended Data Figure 8
+
+Associations were found between 19 artefacts (lower = 17, middle = 2) indicating refits and conjoins within the lower two dense artefact layers but not between them. Also, size sorting is not present in the assemblage. 
+
 
 ```{r}
 refits(stone_artefacts_only)
+
+size_sorting_plot(spit_depths_B6_output)
 ```
 
 
-## Extended Data Figure 5
+## Extended Data Figure 9
 
 Each pulse in artifact discard corresponds to a peak in mass-normalized magnetic susceptibility, increasing in magnitude towards the surface, and a peak in the quantity of burnt chert in the lower two bands (chert is absent in the upper band), indicating artifact pulses are probably associated with phases of intense anthropogenic burning in the shelter 
 
@@ -97,11 +102,11 @@ plot_geoarchaeology_data(prepared_geoarchaeology_data)
 ```
 
 
-## Extended Data Figure 6
+## Extended Data Figure 10
 
 Micromorphology of the excavated deposits shows aeolian and alluvial origins of predominantly lightly clay-coated rounded quartz grains, with less-weathered disaggregation and slow exfoliation from the rockshelter wall sandstone 
 
-## Extended Data Figure 10
+## Extended Data Figure XX
 
 depth age and age of each artefact band, as well as first occupation
 

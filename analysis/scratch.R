@@ -4,9 +4,6 @@
 # [] circular stats
 
 
-
-library(ggplot2)
-
 stone_artefacts_in_sqs_all <- stone_artefacts_in_sqs
 ggplot(stone_artefacts_in_sqs,
        aes(Xnew_flipped,
@@ -993,7 +990,7 @@ library(ggbeeswarm)
 ggplot(size_sorting_plotted_B6,
        aes(Spit, Mass,
            group = Spit)) +
-  geom_boxplot() +
+ # geom_boxplot() +
   geom_quasirandom(alpha = 0.3,
                    size = 0.9) +
   scale_y_log10() +
@@ -1003,7 +1000,7 @@ ggplot(size_sorting_plotted_B6,
 ggplot(size_sorting_plotted_B6,
        aes(Spit, Mass,
            group = Spit)) +
-  geom_boxplot(colour = "grey80") +
+  #geom_boxplot(colour = "grey80") +
   geom_quasirandom(alpha = 0.1,
                    size = 0.9) +
   geom_smooth(aes(group=1)) +
@@ -1013,5 +1010,109 @@ ggplot(size_sorting_plotted_B6,
 # stat tests
 summary(aov(Spit ~ Mass, data = size_sorting_plotted_B6))
 kruskal.test(Spit ~ Mass, data = size_sorting_plotted_B6)
+
+## Raw materials.
+library(tidyverse)
+B6_raw_materials <- readr::read_csv("data/stone_artefact_data/B6_raw_material_table.csv")
+C4_raw_materials <- readr::read_csv("data/stone_artefact_data/C4_raw_material_table.csv")
+
+library(tidyverse)
+library(viridis)
+B6_raw_materials_technology_depths <-
+B6_raw_materials %>%
+  left_join(spit_depths_B6_output,
+            by = c("Spit" = "spit")) %>%
+  mutate(depth_below_surface = zoo::na.approx(depth_below_surface)) %>%
+  mutate(depth_diff = c(0, diff(.$depth_below_surface)),
+         x_centre = c(depth_below_surface[1]/2, zoo::rollmean(depth_below_surface, 2)),
+         Quartzite = Qtztite,
+         Quartz = Qtz)
+
+B6_raw_materials_plot_data <-
+B6_raw_materials_technology_depths %>%
+  gather(`Raw material`,
+         value,
+         -Spit,
+         -depth_below_surface,
+         -`Volume Excavated`,
+         -depth_diff,
+         -x_centre) %>%
+  filter(`Raw material` %in% c("Quartzite",
+                               "Quartz",
+                               "`Crystal Qtz`",
+                               "Silcrete",
+                               "`Rare Quartzite (Brown and Dark Grey)`",
+                               "`Buff and Red Mudstone`",
+                                "`Fine Qtzite`",
+                                "Chert",
+                                "Volcanic",
+                                "Mica",
+                                "Glass",
+                                "`Gerowie Tuff`" ))  %>%
+  mutate(`Artefacts per Litre` = as.numeric(value)/`Volume Excavated`,
+         `Depth below surface (m)` = zoo::na.approx(round(depth_below_surface, 2)))
+
+B6_raw_materials_plot <-
+  ggplot(B6_raw_materials_plot_data,
+         aes(x_centre,
+             `Artefacts per Litre`,
+             fill = `Raw material`)) +
+  geom_bar(stat = "identity",
+           position = "stack",
+           aes(width = depth_diff)) +
+  scale_x_reverse(name = "Depth below surface (m)") +
+  scale_fill_viridis(discrete = TRUE) +
+  coord_flip() +
+  theme_minimal()
+
+B6_technology_plot_data <-
+  B6_raw_materials_technology_depths %>%
+  gather(`Technology`,
+         value,
+         -Spit,
+         -depth_below_surface,
+         -`Volume Excavated`,
+         -depth_diff,
+         -x_centre) %>%
+  filter(`Technology` %in% c("Thinning Flakes",
+                             "Retouched" ,
+                             "Points",
+                             "Cores",
+                             "Bipolar",
+                             "`Convergent Flakes`",
+                             "`Axe Flakes`",
+                             "`Grindstones and Fragments`"))  %>%
+  mutate(`Artefacts per Litre` = as.numeric(value)/`Volume Excavated`,
+         `Depth below surface (m)` = zoo::na.approx(round(depth_below_surface, 2)))
+
+B6_technology_plot <-
+  ggplot(B6_technology_plot_data,
+         aes(x_centre,
+             `Artefacts per Litre`)) +
+  geom_bar(stat = "identity",
+           aes(width = depth_diff,
+               fill = `Technology`)) +
+  scale_x_reverse(name = "") +
+  scale_fill_viridis(discrete = TRUE) +
+  coord_flip() +
+  theme_minimal()
+
+library(gridExtra)
+grid.arrange(B6_raw_materials_plot,
+             B6_technology_plot,
+             ncol = 2)
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 

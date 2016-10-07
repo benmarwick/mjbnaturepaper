@@ -571,22 +571,22 @@ plot_stone_artefacts <- function(stone_artefacts_only){
     geom_point(data = stone_artefacts_only_one[stone_artefacts_only_one$find == "L", ],
                aes(Xnew_flipped,
                    depth_below_ground_surface),
-                colour = viridis(6)[1],
+                colour = plasma(6)[1],
                 size = size-2.5) +
     geom_point(data = stone_artefacts_only_one[stone_artefacts_only_one$find == "HM", ],
                aes(Xnew_flipped,
                    depth_below_ground_surface),
-               colour = viridis(6)[2],
+               colour = plasma(6)[2],
                size = size-2)  +
     geom_point(data = stone_artefacts_only_one[stone_artefacts_only_one$find == "GS", ],
                aes(Xnew_flipped,
                    depth_below_ground_surface),
-               colour = viridis(6)[3],
+               colour = plasma(6)[3],
                size = size-1.5)  +
     geom_point(data = stone_artefacts_only_one[stone_artefacts_only_one$find == "AXE", ],
                aes(Xnew_flipped,
                    depth_below_ground_surface),
-               colour = viridis(6)[4],
+               colour = plasma(6)[4],
                size = size-1)  +
     geom_point(data = stone_artefacts_only_one[stone_artefacts_only_one$find == "ART", ],
                aes(Xnew_flipped,
@@ -596,7 +596,7 @@ plot_stone_artefacts <- function(stone_artefacts_only){
     geom_point(data = stone_artefacts_only_one[stone_artefacts_only_one$find == "ART", ],
                aes(Xnew_flipped,
                    depth_below_ground_surface),
-               colour = viridis(6)[5],
+               colour = plasma(6)[5],
                size = size)  +
     geom_point(data = stone_artefacts_only_one[stone_artefacts_only_one$find == "AF", ], # halo
                aes(Xnew_flipped,
@@ -606,7 +606,7 @@ plot_stone_artefacts <- function(stone_artefacts_only){
     geom_point(data = stone_artefacts_only_one[stone_artefacts_only_one$find == "AF", ],
                aes(Xnew_flipped,
                    depth_below_ground_surface),
-               colour = viridis(6)[6],
+               colour = plasma(6)[6],
                size = size)  +
 
     scale_y_reverse(limits = c(3,0)) +
@@ -688,7 +688,8 @@ refits <- function(stone_artefacts_only){
            value = descr,
            -set, -refit)
 
-  refit_data_long$artefact_Lnums <-  gsub(" ", "", str_extract(refit_data_long$descr,
+  refit_data_long$artefact_Lnums <-  gsub(" ", "",
+                                          stringr::str_extract(refit_data_long$descr,
                                              "\\bL.* \\b"))
 
   refit_data_long$artefact_Lnums[ refit_data_long$artefact_Lnums == "L3024.2"] <- "L3024"
@@ -708,7 +709,7 @@ refits <- function(stone_artefacts_only){
 "PF_C2_41_L3024|PF_C5_18_L3024|PF_E2_32A_L1718",
                                                   artefact_L_details$Description),]
   # for joining
-  artefact_L_details$artefact_Lnums <- str_extract(artefact_L_details$Description,
+  artefact_L_details$artefact_Lnums <- stringr::str_extract(artefact_L_details$Description,
                                                    "L[0-9]*")
 
 
@@ -717,14 +718,14 @@ refits <- function(stone_artefacts_only){
 
   refit_data_long$artefact_sq_sp <-     gsub("-", "_",
                                         gsub(" ", "",
-                                        str_extract(refit_data_long$descr,
+                                             stringr::str_extract(refit_data_long$descr,
                                               "[A-Z]{1}[0-9]{1}-[0-9]{1}.*")))
 
 
   # average location for all lithics in those squares and spits
   stone_artefacts_only$code <- NULL
 
-  stone_artefacts_in_sqs <-
+  stone_artefacts_in_sqs   <-
     stone_artefacts_only %>%
     dplyr::filter(grepl(paste0(refit_data_long$artefact_sq_sp,
                         collapse = "|"), Description)) %>%
@@ -765,6 +766,7 @@ refits <- function(stone_artefacts_only){
   refit_data_long_coords <- rbind(refit_data_long_Lnums,
                                   refit_data_long_no_Lnums)
 
+  # remove spaces at start and end of Descr
   refit_data_long_coords$descr <- gsub("^ | $", "", refit_data_long_coords$descr)
 
   # spit into start and end points to plot
@@ -783,6 +785,15 @@ refits <- function(stone_artefacts_only){
 
   # plot
   ggplot() +
+
+    geom_segment(data = refit_data_coords_wide,
+                 aes(x = Xnew_flipped.x,
+                     y = Elevation.x,
+                     xend = Xnew_flipped.y,
+                     yend = Elevation.y),
+                 size = 1,
+                 colour = "green") +
+
     geom_point(data = refit_data_long_coords,
                     aes(Xnew_flipped,
                         Elevation),
@@ -793,13 +804,6 @@ refits <- function(stone_artefacts_only){
                   Elevation,
                   label = descr)) +
 
-    geom_segment(data = refit_data_coords_wide,
-                 aes(x = Xnew_flipped.x,
-                     y = Elevation.x,
-                     xend = Xnew_flipped.y,
-                     yend = Elevation.y),
-                 size = 1,
-                 colour = "green") +
 
     coord_equal() +
     theme_minimal()
@@ -2079,5 +2083,209 @@ plot_ages_and_artefacts <- function(osl_ages, c14_ages, stone_artefacts_only){
 
 }
 
+
+
+
+#' spit depths B6
+#'
+#' @return a data frame
+#' @export
+#'
+#' @import dplyr
+#' @import tidyr
+
+spit_depths_B6 <- function(points_in_main_excavation_area) {
+
+  surf <- 100.693213   # NE_SEC_TAPE_1
+
+  spit_depths_B6 <-
+  points_in_main_excavation_area %>%
+    filter(grepl("EL_B6", Description)) %>%
+    separate(Description, c("EL", "square", "spit", "position"), "_") %>%
+    mutate(spit = as.numeric(spit)) %>%
+    filter(position %in% c( "N", "S", "E", "W", "C")) %>% # "N", "S", "E", "W",
+    group_by(square, spit) %>%
+    dplyr::summarise(Elevation = mean(Elevation)) %>%
+    arrange(desc(square, spit)) %>%
+    mutate(depth_below_surface = surf - Elevation) %>%
+    mutate(depth_diff = c(0, diff(depth_below_surface)))
+
+  # fix a few problem depths: 23, 24, 25 are odd (0.8660, 1.09)
+  spit_depths_B6[spit_depths_B6$spit %in% c(23:25, 41, 57), ]$depth_below_surface <-
+    c(0.9, 0.95, 1.0, 1.83, 2.48)
+  spit_depths_B6$depth_diff <- c(0, diff(spit_depths_B6$depth_below_surface))
+
+
+
+  return(spit_depths_B6)
+
+}
+
+
+#' size sorting plot
+#'
+#' @return a plot
+#' @export
+#'
+#' @import readxl
+#' @import ggplot2
+#' @import ggbeeswarm
+
+
+size_sorting_plot <- function(spit_depths_B6_output){
+
+size_sorting_plotted_B6 <- readr::read_csv("data/stone_artefact_data/size_sorting_plotted_from_B6.csv")
+
+size_sorting_plotted_B6 <-
+  left_join(size_sorting_plotted_B6,
+            spit_depths_B6_output,
+            by = c("Spit" = "spit") )
+
+
+# draw plot
+size_sorting_plotted_B6_plot <-
+ggplot(size_sorting_plotted_B6,
+       aes(depth_below_surface, Mass,
+           group = depth_below_surface)) +
+  #geom_boxplot(colour = "grey80") +
+  geom_quasirandom(alpha = 0.1,
+                   size = 0.9) +
+  geom_smooth(aes(group=1)) +
+  scale_y_log10() +
+  theme_minimal() +
+  ylab("Artefact mass (g)") +
+  xlab("Depth below surface (m)") +
+  scale_x_reverse(limits = c(3, 0),
+                  breaks = rev(seq(0,3,0.5))) +
+  coord_flip()
+
+size_sorting_plotted_B6_plot
+
+filename_ <- paste0("figures/artefact_sizes_B6.png")
+ggsave(filename_,  width = 10, height = 5)
+
+size_sorting_plotted_B6_plot
+
+}
+
+
+
+#' raw material and technology plots
+#'
+#' @return plots
+#' @export
+#'
+#' @import readr
+#' @import ggplot2
+#' @import tidyverse
+#' @import gridExtra
+
+raw_materials_technology_plots <- function(B6_raw_materials,
+                                           spit_depths_B6_output){
+
+  B6_raw_materials_technology_depths <-
+    B6_raw_materials %>%
+    left_join(spit_depths_B6_output,
+              by = c("Spit" = "spit")) %>%
+    mutate(depth_below_surface = zoo::na.approx(depth_below_surface)) %>%
+    mutate(depth_diff = c(0, diff(.$depth_below_surface)),
+           x_centre = c(depth_below_surface[1]/2, zoo::rollmean(depth_below_surface, 2)),
+           Quartzite = Qtztite,
+           Quartz = Qtz)
+
+  B6_raw_materials_plot_data <-
+    B6_raw_materials_technology_depths %>%
+    gather(`Raw material`,
+           value,
+           -Spit,
+           -depth_below_surface,
+           -`Volume Excavated`,
+           -depth_diff,
+           -x_centre) %>%
+    filter(`Raw material` %in% c("Quartzite",
+                                 "Quartz",
+                                 "`Crystal Qtz`",
+                                 "Silcrete",
+                                 "`Rare Quartzite (Brown and Dark Grey)`",
+                                 "`Buff and Red Mudstone`",
+                                 "`Fine Qtzite`",
+                                 "Chert",
+                                 "Volcanic",
+                                 "Mica",
+                                 "Glass",
+                                 "`Gerowie Tuff`" ))  %>%
+    mutate(`Artefacts per Litre` = as.numeric(value)/`Volume Excavated`,
+           `Depth below surface (m)` = zoo::na.approx(round(depth_below_surface, 2)))
+
+  B6_raw_materials_plot <-
+    ggplot(B6_raw_materials_plot_data,
+           aes(x_centre,
+               `Artefacts per Litre`,
+               fill = `Raw material`)) +
+    geom_bar(stat = "identity",
+             position = "stack",
+             aes(width = depth_diff)) +
+    scale_x_reverse(name = "Depth below surface (m)") +
+    scale_fill_viridis(discrete = TRUE) +
+    coord_flip() +
+    theme_minimal()
+
+  B6_technology_plot_data <-
+    B6_raw_materials_technology_depths %>%
+    gather(`Technology`,
+           value,
+           -Spit,
+           -depth_below_surface,
+           -`Volume Excavated`,
+           -depth_diff,
+           -x_centre) %>%
+    filter(`Technology` %in% c("Thinning Flakes",
+                               "Retouched" ,
+                               "Points",
+                               "Cores",
+                               "Bipolar",
+                               "`Convergent Flakes`",
+                               "`Axe Flakes`",
+                               "`Grindstones and Fragments`"))  %>%
+    mutate(`Artefacts per Litre` = as.numeric(value)/`Volume Excavated`,
+           `Depth below surface (m)` = zoo::na.approx(round(depth_below_surface, 2)))
+
+  B6_technology_plot <-
+    ggplot(B6_technology_plot_data,
+           aes(x_centre,
+               `Artefacts per Litre`)) +
+    geom_bar(stat = "identity",
+             aes(width = depth_diff,
+                 fill = `Technology`)) +
+    scale_x_reverse(name = "") +
+    scale_fill_viridis(discrete = TRUE) +
+    coord_flip() +
+    theme_minimal()
+
+
+  gridExtra::grid.arrange(B6_raw_materials_plot,
+               B6_technology_plot,
+               ncol = 2)
+
+  # save a copy
+
+  dev.off()
+  png(file = "figures/B6_raw_materials_technology.png",
+      width = 3200,
+      height = 1600,
+      res = 300,
+      #antialias = "cleartype")
+      type="cairo")
+  grid::grid.draw(cbind(ggplot2::ggplotGrob(B6_raw_materials_plot),
+                        ggplot2::ggplotGrob(B6_technology_plot),
+                        size = "first"))
+  dev.off()
+
+
+
+
+
+
+}
 
 
