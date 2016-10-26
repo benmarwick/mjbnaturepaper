@@ -189,6 +189,27 @@ ggplot(stone_artefacts_only,
                  depth_below_ground_surface),
              colour = "green")
 
+# look at the plan view for lines also
+ggplot(stone_artefacts_only,
+       aes(Xnew_flipped,
+           Ynew,
+           colour = find)) +
+  geom_point(size = 0.5) +
+  scale_y_continuous(breaks = NULL) +
+  theme_minimal() +
+  scale_x_continuous(breaks = NULL) +
+  xlab("Southwest Section") +
+  scale_color_discrete("Artefact\ntype") +
+  geom_vline(xintercept = c(2.4, 1.4, 0.4, -0.6, -1.6, -2.6, -3.6),
+            colour = "grey80") +
+  geom_hline(yintercept = c(2.5, 1.5, 0.5, -0.5, -1.5),
+             colour = "grey80") +
+  geom_point(data = EL,
+             aes(Xnew_flipped,
+                 Ynew),
+             colour = "green")
+
+# these are the vertical lines
 row_c <- c(2.4, 1.4, 0.4, -0.6, -1.6, -2.6, -3.6)
 row_mids <- row_c/2
 
@@ -1102,11 +1123,59 @@ grid.arrange(B6_raw_materials_plot,
              B6_technology_plot,
              ncol = 2)
 
+# refit plot
+
+rf <-
+ggplot() +
+
+  geom_segment(data = refit_data_coords_wide,
+               aes(x = Xnew_flipped.x,
+                   y = depth_below_surface.x,
+                   xend = Xnew_flipped.y,
+                   yend = depth_below_surface.y),
+               size = 1,
+               colour =  viridis(10)[3]) +
+
+  geom_point(data = refit_data_long_coords,
+             aes(Xnew_flipped,
+                 depth_below_surface),
+             colour = viridis(10)[7]) +
+
+  geom_text_repel(data = refit_data_long_coords,
+                  aes(Xnew_flipped,
+                      depth_below_surface,
+                      label = descr)) +
+
+  scale_y_reverse(limits = c(3, 0),
+                  breaks = rev(seq(0, 3, 0.5))) +
+  ylab("Depth below surface (m)") +
+  xlab("") +
+  coord_equal() +
+  theme_minimal()
 
 
 
+# determined by plotting row C end levels
+row_c <- c(2.4, 1.4, 0.4, -0.6, -1.6, -2.6, -3.6)
+row_mids <- row_c/2
+
+nums = paste0("B", 7:2)
+row_mids <-  row_c[-length(row_c)] + diff(row_c)/2
 
 
+for(i in 1:length(row_mids)){
+  rf = rf + annotation_custom(grob = textGrob(nums[i], gp=gpar(fontsize=10)),
+                            xmin =  row_mids[i],
+                            xmax =  row_mids[i],
+                            ymin = -8.5,
+                            ymax = 2)
+}
+
+# Code to override clipping
+grid.newpage()
+gt <- ggplot_gtable(ggplot_build(p))
+gt$layout$clip[gt$layout$name=="panel"] <- "off"
+grid.draw(gt)
 
 
 

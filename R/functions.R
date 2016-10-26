@@ -639,6 +639,7 @@ plot_stone_artefacts <- function(stone_artefacts_only){
   gt <- ggplot_gtable(ggplot_build(p))
   gt$layout$clip[gt$layout$name=="panel"] <- "off"
   grid.draw(gt)
+  # output to RStudio plot pane, then save as SVG
 
   # save copy
   png("figures/stone_artefacts_SW_section.png",
@@ -776,6 +777,19 @@ refits <- function(stone_artefacts_only){
   refit_data_long_coords_end <-
     refit_data_long_coords[!refit_data_long_coords$descr %in% refit_data_long_coords_start$descr, ]
 
+  # use depth below surface
+ surf <- 100.693213   # NE_SEC_TAPE_1
+
+ refit_data_long_coords$depth_below_surface <-
+   surf - refit_data_long_coords$Elevation
+
+ refit_data_long_coords_start$depth_below_surface <-
+   surf - refit_data_long_coords_start$Elevation
+
+ refit_data_long_coords_end$depth_below_surface <-
+   surf - refit_data_long_coords_end$Elevation
+
+
   # long to wide for plotting lines connecting refits
 
   refit_data_coords_wide <-
@@ -783,57 +797,119 @@ refits <- function(stone_artefacts_only){
             refit_data_long_coords_end,
             by = "set")
 
+  # custom locations of grid lines
+  row_c = c(2.4, 1.4, 0.4, -0.6, -1.6, -2.6, -3.6)
+  nums = paste0("B", 7:2)
+  row_mids <-  row_c[-length(row_c)] + diff(row_c)/2
+
   # plot
+  p1 <-
   ggplot() +
 
     geom_segment(data = refit_data_coords_wide,
                  aes(x = Xnew_flipped.x,
-                     y = Elevation.x,
+                     y = depth_below_surface.x,
                      xend = Xnew_flipped.y,
-                     yend = Elevation.y),
-                 size = 1,
-                 colour = "green") +
+                     yend = depth_below_surface.y),
+                 size = 0.75,
+                 colour =  viridis(10)[3]) +
 
     geom_point(data = refit_data_long_coords,
                     aes(Xnew_flipped,
-                        Elevation),
-                    colour = "red") +
+                        depth_below_surface),
+                    colour = viridis(10)[7],
+               size = 3) +
 
     geom_text_repel(data = refit_data_long_coords,
                     aes(Xnew_flipped,
-                  Elevation,
-                  label = descr)) +
+                        depth_below_surface,
+                  label = descr),
+                  size = 2.5) +
 
-
+    scale_y_reverse(limits = c(3, 0),
+                    breaks = rev(seq(0, 3, 0.5))) +
+    ylab("Depth below surface (m)") +
+    xlab("") +
     coord_equal() +
-    theme_minimal()
+    theme_minimal() +
+    theme(panel.grid.major.x = element_line(colour = "black")) +
+    scale_x_continuous(breaks = row_c,
+                       labels = NULL)
 
-  ggsave("figures/refit_elev.png", width = 15, antialias = "cleartype")
+  p <-  p1
+
+
+  for(i in 1:length(row_mids)){
+    p = p + annotation_custom(grob = grid::textGrob(nums[i], gp=grid::gpar(fontsize=10)),
+                              xmin =  row_mids[i],
+                              xmax =  row_mids[i],
+                              ymin = -8.5,
+                              ymax = 2)
+  }
+
+
+  # Code to override clipping
+  grid.newpage()
+  gt <- ggplot_gtable(ggplot_build(p))
+  gt$layout$clip[gt$layout$name=="panel"] <- "off"
+  grid.draw(gt)
+  # 850 x 500 export in RStudio
+
+  # save copy
+  png("figures/refit_elev.png",
+      height = 1200,
+      width = 1200*1.92)
+      #res = 300,
+      #antialias = "cleartype")
+  grid.draw(gt)
+  dev.off()
+
+
+  ggsave("figures/refit_elev.svg",
+         height = 8,
+         width = 8,
+         antialias = "cleartype")
 
   # plot
   ggplot() +
-    geom_point(data = refit_data_long_coords,
-               aes(Xnew_flipped,
-                   Ynew),
-               colour = "red") +
 
-    geom_text_repel(data = refit_data_long_coords,
-                    aes(Xnew_flipped,
-                        Ynew,
-                        label = descr)) +
+    scale_y_continuous(name = "",
+                       breaks = NULL) +
+    scale_x_continuous(name = "",
+                       breaks = NULL) +
+
+    geom_vline(xintercept = c(2.4, 1.4, 0.4, -0.6, -1.6, -2.6, -3.6),
+               colour = "grey80") +
+    geom_hline(yintercept = c(2.5, 1.5, 0.5, -0.5, -1.5),
+               colour = "grey80") +
 
     geom_segment(data = refit_data_coords_wide,
                  aes(x = Xnew_flipped.x,
                      y = Ynew.x,
                      xend = Xnew_flipped.y,
                      yend = Ynew.y),
-                 size = 1,
-                 colour = "green") +
+                 size = 0.75,
+                 colour = viridis(10)[3]) +
+
+    geom_point(data = refit_data_long_coords,
+               aes(Xnew_flipped,
+                   Ynew),
+               colour = viridis(10)[7],
+               size = 3) +
+
+    geom_text_repel(data = refit_data_long_coords,
+                    aes(Xnew_flipped,
+                        Ynew,
+                        label = descr),
+                    size = 2.5) +
 
     coord_equal() +
     theme_minimal()
 
-  ggsave("figures/refit_plan.png", width = 15, antialias = "cleartype")
+  ggsave("figures/refit_plan.svg",
+         width = 8,
+         height = 8,
+         antialias = "cleartype")
 
   # what is the distance between the two refit pieces?
   refit_data_coords_wide$refit_dists_m <-
@@ -848,7 +924,9 @@ refits <- function(stone_artefacts_only){
   ggplot(refit_data_coords_wide,
          aes(refit_dists_m)) +
     geom_histogram() +
-    theme_minimal()
+    theme_minimal() +
+    xlab("Distance between \nrefitting sets (m)") +
+    ylab("Count")
 
   ggsave("figures/refit_dists_histogram.png", width = 15, antialias = "cleartype")
 
@@ -902,10 +980,11 @@ refits <- function(stone_artefacts_only){
     theme(axis.text.x = element_text(size = 18)) +
     coord_polar(start = 0) +
     scale_x_continuous(limits = c(0, 360), breaks = c(0, 90, 180, 270)) +
-    theme_minimal(base_size = 14) +
+    theme_minimal(base_size = 12) +
     xlab("") +
-    ggtitle(paste0("MJB refit orientations \n (Rayleigh = ",
+    ggtitle(paste0("Refit orientations \n (Rayleigh = ",
                    round(refit_angle_rads_test$statistic, 3),
+                   ", ",
                    " p = ",
                    round(refit_angle_rads_test$p.value, 3),
                    ")"))
