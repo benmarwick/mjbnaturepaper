@@ -51,41 +51,100 @@ stone_artefacts(cleaned_rotated_points_in_main_excavation_area)
 
 # Main paper figures and tables
 
-Here's the code to reproduce the figures in the main paper that I'm involved in:
+This document the code to reproduce the figures in the main paper that I'm involved in.
 
 ## Extended Data Figure 4
 
 The artefacts occur in three dense bands. Detailed piece plotting revealed three dense bands of artefacts at the site with less dense bands of artefacts in between. 
 
-Each band corresponds to a change in raw material use and stone working technology
+Each band corresponds to a change in raw material use and stone working technology. 
 
 ```{r}
-# artefacts in all squares
+# section scatter plot, artefacts in all squares
 plot_stone_artefacts(stone_artefacts_only)
 
-# just artefacts in B and C
+# section scatter plot, just artefacts in B and C
 stone_artefacts_only_B_C <- stone_artefacts_only[grep("B|C", stone_artefacts_only$square), ]
 plot_stone_artefacts(stone_artefacts_only_B_C)
 
+# vertical bar plot of raw materials and technology, B6 only
 spit_depths_B6_output <- spit_depths_B6(points_in_main_excavation_area)
+
+B6_raw_materials <- readr::read_csv("data/stone_artefact_data/B6_raw_material_table.csv")
+
 raw_materials_technology_plots(B6_raw_materials, spit_depths_B6_output)
 
-# These plots are arranged in inkscape to create the final figure
+# These plots are arranged in inkscape to create the final figure EDF-4
 
 ```
 
 
-
-
 ## Extended Data Figure 8
 
-Associations were found between 19 artefacts (lower = 17, middle = 2) indicating refits and conjoins within the lower two dense artefact layers but not between them. Also, size sorting is not present in the assemblage. 
+Associations were found between 19 artefacts (lower = 17, middle = 2) indicating refits and conjoins within the lower two dense artefact layers but not between them. Although artefacts increase in mass slightly with depth overall, change in depth explains only 0.20% of changes in artefact mass. If we look into the upper and lower bands of artefacts separately, we see that ...  
 
 
 ```{r}
-refits(stone_artefacts_only)
+# plot refit plan and section views, and rose plot of dip
+# check aspect ratio of these plots
+refit_output <- refits(stone_artefacts_only)
 
+# Vertical distance between refitted pieces
+refit_vertical_dist <- 
+median(abs(with(refit_output$refit_data_coords_wide, Elevation.x  -  Elevation.y)))
+
+# size sorting plot with smoother
 size_sorting_plot(spit_depths_B6_output)
+
+# Resampling ANOVA
+size_sorting_stat_test_output <- 
+size_sorting_stat_test(spit_depths_B6_output, the_n = 0)
+
+# Bayesian linear regression for depth and mass
+only_spits_with_more_than_n_artefacts <- 
+size_sorting_stat_test_output$only_spits_with_more_than_n_artefacts
+
+library(rstanarm)
+stan_lm_output <-
+stan_lm(Mass ~ depth_below_surface,
+        data = only_spits_with_more_than_n_artefacts,
+        prior = NULL,
+        chains = 1,
+        cores = 2,
+        seed = 1)
+
+# slope
+slope <- as.data.frame(stan_lm_output)$depth_below_surface
+mean_slope <- mean(slope)
+ninetyfive_credible_slope <- quantile(slope, c(0.025, 0.975))
+
+# r-squared
+r_squared <- as.data.frame(stan_lm_output)$R2
+mean_r_squared <- mean(r_squared)
+ninetyfive_credible_r_squared <-  quantile(r_squared, c(0.025, 0.975))
+
+# split to look at upper band of artefacts and lower band of artefacts
+upper_band <- size_sorting_plotted_B6 %>%
+  filter(depth_below_surface > 0.5 &
+         depth_below_surface < 1.25) %>%
+  stan_lm(Mass ~ depth_below_surface,
+          data = .,
+          prior = NULL,
+          chains = 1,
+          cores = 2,
+          seed = 1)
+
+lower_band <- size_sorting_plotted_B6 %>%
+  filter(depth_below_surface > 1.8 &
+           depth_below_surface < 2.6) %>%
+  stan_lm(Mass ~ depth_below_surface,
+          data = .,
+          prior = NULL,
+          chains = 1,
+          cores = 2,
+          seed = 1)
+
+
 ```
 
 

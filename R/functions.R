@@ -645,8 +645,8 @@ plot_stone_artefacts <- function(stone_artefacts_only){
   png("figures/stone_artefacts_SW_section.png",
       height = 1200,
       width = 1200*1.92,
-      res = 300,
-      antialias = "cleartype")
+      res = 300)
+      # antialias = "cleartype")
   grid.draw(gt)
   dev.off()
 
@@ -867,8 +867,8 @@ refits <- function(stone_artefacts_only){
 
   ggsave("figures/refit_elev.svg",
          height = 8,
-         width = 8,
-         antialias = "cleartype")
+         width = 8)
+         #antialias = "cleartype")
 
   # plot
   ggplot() +
@@ -908,8 +908,8 @@ refits <- function(stone_artefacts_only){
 
   ggsave("figures/refit_plan.svg",
          width = 8,
-         height = 8,
-         antialias = "cleartype")
+         height = 8)
+         #antialias = "cleartype")
 
   # what is the distance between the two refit pieces?
   refit_data_coords_wide$refit_dists_m <-
@@ -928,7 +928,8 @@ refits <- function(stone_artefacts_only){
     xlab("Distance between \nrefitting sets (m)") +
     ylab("Count")
 
-  ggsave("figures/refit_dists_histogram.png", width = 15, antialias = "cleartype")
+  ggsave("figures/refit_dists_histogram.png", width = 15)
+         #antialias = "cleartype")
 
   # what is the plunge angle of the refits?
   # compute from elevations and X (Easting.x or Xnewflipped)
@@ -994,9 +995,17 @@ refits <- function(stone_artefacts_only){
   # grid::grid.draw(g1)
   # grid::grid.rect(x=0,y=0,height=2, width=1.05, gp=grid::gpar(col="white"))
 
-  ggsave("figures/refits orientations.png", antialias = "cleartype")
+  ggsave("figures/refits orientations.png")
+         # antialias = "cleartype")
+
+  # vertical distance of refits
+ with(refit_data_coords_wide, Elevation.x  -  Elevation.y)
 
   ## correlation between size of arefact and distance of refit?
+
+  return(list(refit_data = refit_data,
+         refit_data_long_coords = refit_data_long_coords,
+         refit_data_coords_wide = refit_data_coords_wide))
 
   options(warn = 0)
 
@@ -1449,13 +1458,25 @@ plot_geoarchaeology_data <- function(prepared_geoarchaeology_data){
                           SILT,
                           CLAY)
 
-  names(plotting_data) <- c(("Stone artefacts (n)"),
-                            ("Burnt artefacts (n)"),
-                            ("Magnetic susceptibility (SI units)"),
-                            ("d13C per mill"),
+
+  # make column names informative
+  names(plotting_data) <- c(("Stone \nartefacts (n)"),
+                            ("Burnt \nartefacts (n)"),
+                            ("Magnetic \nsusceptibility \n (SI units)"),
+                            ("\u03B413C \u2030 VPDB"),
                             ("Sand (%)"),
                             ("Silt (%)"),
                             ("Clay (%)"))
+
+  exprs <- expression("Stone \nartefacts (n)",  # label for 1st variable
+                      "Burnt \nartefacts (n)",  # label for 2nd variable
+                      "Magnetic \nsusceptibility \n(SI units)",
+                       delta^{13}*C~"\u2030"~VPDB,
+                      "Sand (%)",
+                      "Silt (%)",
+                      "Clay (%)")
+
+
 
 
   #  lowest dense artefact band at between 2.1 and 2.3m depth near the back wall
@@ -1470,33 +1491,41 @@ plot_geoarchaeology_data <- function(prepared_geoarchaeology_data){
                  "middle\nband",
                  "upper\nband", "")
 
-
+require(analogue)
+# draw basic plot
+invisible(
 plt1 <- analogue::Stratiplot(depth ~ .,
                   varTypes = "absolute",
+                  labelValues = exprs,
                   labelRot = 90,
                   data = plotting_data,
                   type = c("l","g"),
                   col = "black",
                   lwd = 1.5,
                   zones = zones,
-                  zoneNames = zoneNames)
+                  zoneNames = zoneNames))
 plt1$x.scales$rot <- c(90,90)
 
-plt2 <- Stratiplot(depth ~ .,
+# add tick marks that we will move to the RHS
+invisible(
+plt2 <- analogue::Stratiplot(depth ~ .,
                    varTypes = "absolute",
+                   labelValues = exprs,
                    labelRot = 90,
                    data = plotting_data,
                    type = c("l","g"),
                    col = "black",
                    lwd = 1.5,
-                   yticks = c(0.77, 1.11, 1.75),
-                   ylab =   c(34.2, 45.3, 56.3))
+                   yticks = c(0.77, 1.11, 1.75)))
+
+plt2$y.scales$labels <-  c(34.2, 45.3, 56.3)
 plt2$x.scales$rot <- c(90,90)
 
-
+# make two y axes
+invisible(
 plt3 <- latticeExtra::doubleYScale(plt1,
                                    plt2,
-                                   add.axis=T)
+                                   add.axis=T))
 
 plt3 <- update(plt3, par.settings = simpleTheme(col = c("black", "black")))
 plt3
@@ -2226,9 +2255,9 @@ size_sorting_plotted_B6_plot <-
 ggplot(size_sorting_plotted_B6,
        aes(depth_below_surface, Mass,
            group = depth_below_surface)) +
-  #geom_boxplot(colour = "grey80") +
+  # geom_boxplot(colour = "grey20") +
   geom_quasirandom(alpha = 0.1,
-                   size = 0.9) +
+                   size = 1) +
   geom_smooth(aes(group=1)) +
   scale_y_log10() +
   theme_minimal() +
@@ -2244,6 +2273,90 @@ filename_ <- paste0("figures/artefact_sizes_B6.png")
 ggsave(filename_,  width = 10, height = 5)
 
 size_sorting_plotted_B6_plot
+
+}
+
+#' size sorting stat test
+#'
+#' @return a data frame
+#' @export
+#'
+#' @import readxl
+#' @import tidyverse
+#' @import car
+#' @import coin
+#' @import userfriendlyscience
+
+size_sorting_stat_test <- function(spit_depths_B6_output,
+                                   the_n = 10,
+                                   p_value = 0.05){
+
+# stat test of difference in size with depth
+size_sorting_plotted_B6 <- readxl::read_excel("data/stone_artefact_data/size_sorting_plotted_from_B6.xlsx")
+
+# get depths
+size_sorting_plotted_B6 <-
+  left_join(size_sorting_plotted_B6,
+            spit_depths_B6_output,
+            by = c("Spit" = "spit") )
+
+# looks like just one or two spits are sig, probably ones with very few artefacts
+# If we exclude spits with <n artefacts
+the_n <- the_n
+only_spits_with_more_than_n_artefacts <-
+  size_sorting_plotted_B6 %>%
+  group_by(Spit) %>%
+  tally() %>%
+  filter(n > the_n) %>%
+  left_join(size_sorting_plotted_B6)
+
+
+# test for heteroscedasticity with Levene's test:
+l_test <- car::leveneTest(Mass ~ as.factor(depth_below_surface),
+                     only_spits_with_more_than_n_artefacts)
+
+# check to see what the variances of the groups are
+# linear models are fairly robust to heterogeneity of variance
+# so long as the maximum variance is no more than 4× greater
+# than the minimum variance. If it's high, we cannot use ANOVA
+require(tidyverse)
+variance_ratio <-
+  only_spits_with_more_than_n_artefacts %>%
+  group_by(depth_below_surface) %>%
+  summarise(vars = var(Mass, na.rm = TRUE)) %>%
+  summarise(ratios = range(.$vars, na.rm = TRUE)[2] / range(.$vars, na.rm = TRUE)[1])
+
+# resampling test in place of classic ANOVA
+require(coin)
+oneway_test_result <-
+  oneway_test(Mass ~ as.factor(depth_below_surface),
+              data = only_spits_with_more_than_n_artefacts,
+              distribution=approximate(B=1e5))
+
+# Games-Howell Post-Hoc Test, does not assume equal variances and sample sizes.
+require(userfriendlyscience)
+post_hoc_test <-
+  with(only_spits_with_more_than_n_artefacts,
+       posthocTGH(Mass, as.factor(depth_below_surface)))
+
+# filter output to see what comparisons are significant
+sig_comparisons <-
+  post_hoc_test$output$games.howell %>%
+  as_data_frame() %>%
+  mutate(comparison = unlist(dimnames(post_hoc_test$output$games.howell)[1])) %>%
+  filter(p < p_value) %>%
+  separate(comparison,
+           into = c("depth_a",
+                    "depth_b"),
+           sep = ":",) %>%
+  mutate(spit_a = round(as.numeric(depth_a), 3),
+         spit_b = round(as.numeric(depth_b), 3))
+
+  return(list(only_spits_with_more_than_n_artefacts = only_spits_with_more_than_n_artefacts,
+              variance_ratio = variance_ratio,
+              oneway_test_result = oneway_test_result,
+              post_hoc_test = post_hoc_test,
+              sig_comparisons = sig_comparisons))
 
 }
 

@@ -1,7 +1,4 @@
 
-# [] Make rare items plot above abundant ones
-# [] Age-depth curve
-# [] circular stats
 
 
 stone_artefacts_in_sqs_all <- stone_artefacts_in_sqs
@@ -1021,9 +1018,9 @@ ggplot(size_sorting_plotted_B6,
 ggplot(size_sorting_plotted_B6,
        aes(Spit, Mass,
            group = Spit)) +
-  #geom_boxplot(colour = "grey80") +
-  geom_quasirandom(alpha = 0.1,
-                   size = 0.9) +
+  geom_boxplot(colour = "grey20") +
+  geom_quasirandom(alpha = 0.4,
+                   size = 0.5) +
   geom_smooth(aes(group=1)) +
   scale_y_log10() +
   theme_minimal()
@@ -1123,6 +1120,13 @@ grid.arrange(B6_raw_materials_plot,
              B6_technology_plot,
              ncol = 2)
 
+
+# refit vertical distance
+
+hist(with(refit_output$refit_data_coords_wide, Elevation.x  -  Elevation.y))
+summary(abs(with(refit_output$refit_data_coords_wide, Elevation.x  -  Elevation.y)))
+
+
 # refit plot
 
 rf <-
@@ -1176,6 +1180,218 @@ grid.newpage()
 gt <- ggplot_gtable(ggplot_build(p))
 gt$layout$clip[gt$layout$name=="panel"] <- "off"
 grid.draw(gt)
+
+# mass by depth, major boundaries
+library(ggbeeswarm)
+  ggplot(size_sorting_plotted_B6,
+         aes(depth_below_surface, Mass,
+             group = depth_below_surface)) +
+  # geom_boxplot(colour = "grey20") +
+  geom_quasirandom(alpha = 0.1,
+                   size = 1) +
+  geom_smooth(aes(group=1)) +
+  scale_y_log10() +
+  theme_minimal() +
+  ylab("Artefact mass (g)") +
+  xlab("Depth below surface (m)") +
+  scale_x_reverse(limits = c(3, 0),
+                  breaks = rev(seq(0,3,0.5))) +
+  geom_vline(xintercept = c(0.5, 1.25,
+                            1.8, 2.6),
+             colour = "red") +
+  coord_flip()
+
+
+
+## Simulation function to create data, analyze it using
+## kruskal.test, and return the p-value
+## change rexp to change the simulation distribution
+
+simfun <- function(means, k=length(means), n=rep(50,k)) {
+  mydata <- lapply( seq_len(k), function(i) {
+    rexp(n[i], 1) - 1 + means[i]
+  })
+  kruskal.test(mydata)$p.value
+}
+
+# simulate under the null to check proper sizing
+B <- 10000
+out1 <- replicate(B, simfun(rep(3,4)))
+hist(out1)
+mean( out1 <= 0.05 )
+binom.test( sum(out1 <= 0.05), B, p=0.05)
+
+### Now simulate for power
+
+B <- 10000
+out2 <- replicate(B, simfun( c(3,3,3.2,3.3)))
+hist(out2)
+mean( out2 <= 0.05 )
+binom.test( sum(out2 <= 0.05), B, p=0.05 )
+
+# stat test of difference in size with depth
+size_sorting_plotted_B6 <- readxl::read_excel("E:\\My Documents\\My UW\\Research\\1206 M2 excavation\\1506 M2 excavation\\data\\Size Sorting plotted from B6.xlsx")
+
+# get depths
+size_sorting_plotted_B6 <-
+  left_join(size_sorting_plotted_B6,
+            spit_depths_B6_output,
+            by = c("Spit" = "spit") )
+
+# looks like just one or two spits are sig, probably ones with very few artefacts
+# If we exclude spits with <n artefacts
+the_n <- 0
+only_spits_with_more_than_n_artefacts <-
+  size_sorting_plotted_B6 %>%
+  group_by(Spit) %>%
+  tally() %>%
+  filter(n > the_n) %>%
+  left_join(size_sorting_plotted_B6)
+
+
+# test for heteroscedasticity with Levene's test:
+library(car)
+l_test <- leveneTest(Mass ~ as.factor(depth_below_surface),
+                     only_spits_with_more_than_n_artefacts)
+
+# check to see what the variances of the groups are
+# linear models are fairly robust to heterogeneity of variance
+# so long as the maximum variance is no more than 4× greater
+# than the minimum variance. If it's high, we cannot use ANOVA
+library(tidyverse)
+variance_ratio <-
+  only_spits_with_more_than_n_artefacts %>%
+  group_by(depth_below_surface) %>%
+  summarise(vars = var(Mass, na.rm = TRUE)) %>%
+  summarise(ratios = range(.$vars, na.rm = TRUE)[2] / range(.$vars, na.rm = TRUE)[1])
+
+# resampling test in place of classic ANOVA
+library(coin)
+oneway_test_result <-
+  oneway_test(Mass ~ as.factor(depth_below_surface),
+              data = only_spits_with_more_than_n_artefacts,
+              distribution=approximate(B=1e5))
+
+# Games-Howell Post-Hoc Test, does not assume equal variances and sample sizes.
+library(userfriendlyscience)
+post_hoc_test <-
+  with(only_spits_with_more_than_n_artefacts,
+       posthocTGH(Mass, as.factor(depth_below_surface)))
+
+# filter output to see what comparisons are significant
+sig_comparisons <-
+  post_hoc_test$output$games.howell %>%
+  as_data_frame() %>%
+  mutate(comparison = unlist(dimnames(post_hoc_test$output$games.howell)[1])) %>%
+  filter(p < 0.05) %>%
+  separate(comparison,
+           into = c("spit_a",
+                    "spit_b"),
+           sep = ":",) %>%
+  mutate(spit_a = round(as.numeric(spit_a), 3),
+         spit_b = round(as.numeric(spit_b), 3))
+
+# Bayesian linear regression for depth and mass
+library(rstanarm)
+stan_lm_output <-
+stan_lm(Mass ~ depth_below_surface,
+        data = only_spits_with_more_than_n_artefacts,
+        prior = NULL,
+        chains = 1,
+        cores = 2,
+        seed = 1)
+
+mean(as.data.frame(stan_lm_output)$depth_below_surface < 0) # Pr(beta_{Density} < 0)
+
+# slope
+slope <- as.data.frame(stan_lm_output)$depth_below_surface
+hist(slope)
+mean(slope)
+quantile(slope, probs=c(.025,.975))
+
+# r-squared
+r_squared <- as.data.frame(stan_lm_output)$R2
+hist(r_squared)
+mean(r_squared)
+quantile(r_squared, probs=c(.025,.975))
+
+
+launch_shinystan(stan_lm_output)
+
+draws <- as.data.frame(stan_lm_output)
+colnames(draws)[1:2] <- c("a", "b")
+
+pp_check(stan_lm_output, check = "distributions", overlay = FALSE, nreps = 5)
+
+only_spits_with_more_than_n_artefacts %>%
+  filter(Mass < 100) %>%
+ggplot(aes(x = depth_below_surface,
+           y = Mass)) +
+  geom_point(size = 1) +
+  geom_abline(data = draws,
+              aes(intercept = a,
+                  slope = b),
+              color = "skyblue",
+              size = 0.2,
+              alpha = 0.05) +
+  geom_abline(intercept = coef(stan_lm_output)[1],
+              slope = coef(stan_lm_output)[2],
+              color = "skyblue4",
+              alpha = 0.4,
+              size = 1)
+
+
+
+plot_title <- ggplot2::ggtitle("Posterior Distributions")
+plot(stan_lm_output, "hist", fill = "skyblue") + plot_title
+
+pp_check(stan_lm_output, check = "resid", overlay = TRUE)
+plot(stan_lm_output, "ess")
+
+rstan::stan_trace(stan_lm_output)
+
+# split to look at upper band of artefacts and lower band of artefacts
+upper_band <- size_sorting_plotted_B6 %>%
+  filter(depth_below_surface > 0.5 &
+         depth_below_surface < 1.25) %>%
+  stan_lm(Mass ~ depth_below_surface,
+          data = .,
+          prior = NULL,
+          chains = 1,
+          cores = 2,
+          seed = 1)
+
+lower_band <- size_sorting_plotted_B6 %>%
+  filter(depth_below_surface > 1.8 &
+           depth_below_surface < 2.6) %>%
+  stan_lm(Mass ~ depth_below_surface,
+          data = .,
+          prior = NULL,
+          chains = 1,
+          cores = 2,
+          seed = 1)
+
+devtools::install_github("gavinsimpson/analogue")
+library("analogue")
+set.seed(1)
+df <- setNames(data.frame(matrix(rnorm(200 * 3), ncol = 3)),
+               c("d13C", "d15N", "d18O"))
+df <- transform(df, Age = 1:200)
+exprs <- expression(delta^{13}*C,  # label for 1st variable
+                    "salted \npeanuts",  # label for 2nd variable
+                    delta^{18}*O)  # label for 3rd variable
+Stratiplot(Age ~ .,
+           data = df,
+           labelValues = exprs,
+           varTypes = "absolute",
+           type = "h")
+
+
+
+
+
+
+
 
 
 
