@@ -85,6 +85,8 @@ Associations were found between 19 artefacts (lower = 17, middle = 2) indicating
 
 
 ```{r}
+# Refits -------------------------------------
+
 # plot refit plan and section views, and rose plot of dip
 # check aspect ratio of these plots
 refit_output <- refits(stone_artefacts_only)
@@ -92,6 +94,8 @@ refit_output <- refits(stone_artefacts_only)
 # Vertical distance between refitted pieces
 refit_vertical_dist <- 
 median(abs(with(refit_output$refit_data_coords_wide, Elevation.x  -  Elevation.y)))
+
+# Size sorting ---------------------------------------------
 
 # size sorting plot with smoother
 size_sorting_plot(spit_depths_B6_output)
@@ -122,6 +126,14 @@ ninetyfive_credible_slope <- quantile(slope, c(0.025, 0.975))
 r_squared <- as.data.frame(stan_lm_output)$R2
 mean_r_squared <- mean(r_squared)
 ninetyfive_credible_r_squared <-  quantile(r_squared, c(0.025, 0.975))
+
+size_sorting_plotted_B6 <- readxl::read_excel("data\\stone_artefact_data\\size_sorting_plotted_from_B6.xlsx")
+
+# get depths
+size_sorting_plotted_B6 <-
+  left_join(size_sorting_plotted_B6,
+            spit_depths_B6_output,
+            by = c("Spit" = "spit") )
 
 # split to look at upper band of artefacts and lower band of artefacts
 upper_band <- size_sorting_plotted_B6 %>%
@@ -155,6 +167,9 @@ Each pulse in artifact discard corresponds to a peak in mass-normalized magnetic
 ```{r}
 prepared_geoarchaeology_data <-  
   prepare_geoarchaeology_data(cleaned_rotated_points_in_main_excavation_area)
+
+# grain size and cluster plot is separate
+plot_granulometry_data(prepared_geoarchaeology_data)
 
 plot_geoarchaeology_data(prepared_geoarchaeology_data)
 

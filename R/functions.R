@@ -1030,14 +1030,14 @@ prepare_geoarchaeology_data <- function(cleaned_rotated_points_in_main_excavatio
 
   options(warn=-1)
   # mag sus from KL
-  mag_sus_B2 <- read.csv("data/geoarchaeology_data/Kelsey_Lowe_mag_sus_B2.csv")
+  mag_sus_B2 <- read.csv("data/geoarchaeology_data/MJB_Lowe2016.csv", stringsAsFactors = FALSE)
+  mag_sus_B2 <- mag_sus_B2[c(2:54), ]
+  mag_sus_B2$Depth.Below.Surface..m <- as.numeric(mag_sus_B2$X)
   # remove the C3 stuff
-  mag_sus_B2$Square <- NULL
-  mag_sus_B2$Depth <- NULL
-  mag_sus_B2$Spit <- NULL
-
-  mag_sus_B2$Depth.Below.Surface..m <-
-    as.numeric(mag_sus_B2$Depth.Below.Surface..cm.) / 100
+  mag_sus_B2$X <- NULL
+  mag_sus_B2$SQB2.1 <- NULL
+  mag_sus_B2$SQC3 <- NULL
+  mag_sus_B2$SQC3.1 <- NULL
 
   # depths were measured on a tape, we shot some points on that tape. Let's find them
   # SW wall tape... actually NE_SEC_TAPE 1-4 (Not SECT)
@@ -1045,8 +1045,6 @@ prepare_geoarchaeology_data <- function(cleaned_rotated_points_in_main_excavatio
   # as we can see from the 3d plot of section things
 
   # NE_SECT_TAPE 1 is the ground surface, then the other points are one meter apart
-
-
   NE_SEC_TAPE <-
     cleaned_rotated_points_in_main_excavation_area[grepl("NE_SEC_TAPE",
                       cleaned_rotated_points_in_main_excavation_area$Description), ]
@@ -1058,8 +1056,8 @@ prepare_geoarchaeology_data <- function(cleaned_rotated_points_in_main_excavatio
   # need to interpolate to 5 cm to match with mag_sus_B2$Depth.Below.Surface..cm.
 
   xout <- seq(min(mag_sus_B2$Depth.Below.Surface..m),
-              max(mag_sus_B2$Depth.Below.Surface..m),
-              by = 0.05)
+              3.5,
+              by = 0.01)
 
   # approx returns a list, convert to dataframe
   # we also need to extrapolate a little
@@ -1075,9 +1073,9 @@ prepare_geoarchaeology_data <- function(cleaned_rotated_points_in_main_excavatio
   # there is a tiny difference in the vectors, so we convert to chr
 
   mag_sus_B2$Depth.Below.Surface..m  <-
-    as.character(mag_sus_B2$Depth.Below.Surface..m)
+  sprintf("%.2f", mag_sus_B2$Depth.Below.Surface..m)
 
-  tape_depths_interp$tape <-  as.character(tape_depths_interp$tape)
+  tape_depths_interp$tape <-  sprintf("%.2f", tape_depths_interp$tape)
 
   mag_sus_B2_total_station <-
     dplyr::left_join(mag_sus_B2,
@@ -1211,7 +1209,7 @@ prepare_geoarchaeology_data <- function(cleaned_rotated_points_in_main_excavatio
 
   # put depths in a column so we can calibrate with total station depths
   # need the depth col as character to ensure the join works
-  three_classes$tape_depths <- as.character(as.numeric(row.names(three_classes)) - 1 )
+  three_classes$tape_depths <- as.character(sprintf("%.2f", as.numeric(row.names(three_classes)) - 1 ))
 
   # we used the same tape as the mag sus data, so we can use that method to
   # get total station depths
@@ -1386,7 +1384,7 @@ prepare_geoarchaeology_data <- function(cleaned_rotated_points_in_main_excavatio
   # for each data col in things_in_C3
   # don't interpolat data, just have gaps
   depths_0.01 <- seq(0,
-                     max(d13C_depth_means_total_station$total_station_depth_below_surface),
+                     3.5,
                      0.01)
 
   # just match the rows and allow gaps
@@ -1399,6 +1397,13 @@ prepare_geoarchaeology_data <- function(cleaned_rotated_points_in_main_excavatio
   # all_rows <- all_rows[depths_0.01 <= max(things_in_C3$depth_below_surf), ]
 
   # add mag sus data
+  mag_sus_B2_total_station$SQB2 <- as.numeric(mag_sus_B2_total_station$SQB2)
+  mag_sus_B2_total_station$total_station_depth_m <-
+    as.numeric(sprintf("%.2f",  mag_sus_B2_total_station$total_station_depth_m))
+
+  mag_sus_B2_total_station$Depth.Below.Surface..m <-
+    as.numeric(sprintf("%.2f",  mag_sus_B2_total_station$Depth.Below.Surface..m))
+
   all_rows <-
     left_join(all_rows,
               mag_sus_B2_total_station,
@@ -1417,6 +1422,145 @@ prepare_geoarchaeology_data <- function(cleaned_rotated_points_in_main_excavatio
               by = c("depths" = "depth_below_surf"))
   options(warn=0)
   return(all_rows)
+
+}
+
+
+#' return the phases and their depths
+#'
+#' @param phases
+#'
+#' @return data frame
+#' @export
+#'
+#' @import analogue
+#' @import lattice
+#' @importFrom latticeExtra doubleYScale
+#'
+#'
+phases <- function(phases){
+
+
+### Phase depths from ZJ SOM and bayesian model figure #####
+
+# •	band 1 is the archaeologically sterile sand at the base of the deposit (4.6–2.6 m depth);
+# •	band 2 is the lowest dense artefact layer (2.6–2.15 m depth);
+# •	band 3 represents a ~65 cm-thick layer of lower lithic abundance (2.1–1.55 m depth);
+# •	band 4 is the middle dense artefact layer (1.55–0.95 m depth);
+# •	band 5 represents a ~30 cm-thick layer of lowest lithic abundance (0.95–0.70 m depth);
+# •	band 6 is the uppermost dense artefact layer (0.70–0.35 m depth) and the only phase with a similarly high lithic abundance as the lowest dense artefact layer; and
+# •	band 7 represents the uppermost 35 cm of deposit, which consists mostly of shell midden
+
+
+phases <- frame_data(
+  ~phase, ~upper, ~lower,
+  1,     2.6,    3.0,
+  2,     2.15,   2.6,
+  3,     1.55,   2.15,
+  4,     0.95,   1.55,
+  5,     0.7,    0.95,
+  6,     0.35,   0.7,
+  7,     0.0,    0.35)
+
+return(phases)
+
+}
+
+#' plot_granulometry_data
+#'
+#' @param prepared_geoarchaeology_data
+#'
+#' @return plots
+#' @export
+#'
+#' @import analogue
+#' @import rioja
+#'
+#'
+plot_granulometry_data <- function(prepared_geoarchaeology_data){
+
+  all_rows <- prepared_geoarchaeology_data
+  # straigraphic panel plot
+  depth <- all_rows$depths
+
+  # subset variables for plotting
+  plotting_data <- select(all_rows,
+                          # Burnt.Earth,
+                          # Heated.litre,
+                          # Artefacts,
+                          # Burnt.Chert,
+                          # Charcoal.Litre,
+                          #Charcoal.Litre.log,
+                          # Charcoal.g,
+                          # Artefacts.Litre,
+                          # Xlf..m.3.kg.,
+                          # mean_d13C_corrected,
+                          SAND,
+                          SILT,
+                          CLAY)
+
+
+  # make column names informative
+  names(plotting_data) <- c(
+                            ("Sand (%)"),
+                            ("Silt (%)"),
+                            ("Clay (%)"))
+
+  exprs <- expression(
+                      "Sand (%)",
+                      "Silt (%)",
+                      "Clay (%)")
+
+
+phases_data <- phases()
+
+  zones <-  unique(sort(as.vector(t(as.matrix(phases_data[,-1]))[-2])))
+  zoneNames <- c(1,2, 3,4,5,6,7, "phase")
+
+  require(analogue)
+  # draw basic plot
+  invisible(
+    plt1 <- analogue::Stratiplot(depth ~ .,
+                                 ylim = c(0,3),
+                                 varTypes = "absolute",
+                                 labelValues = exprs,
+                                 labelRot = 90,
+                                 data = plotting_data,
+                                 type = c("l","g"),
+                                 col = "black",
+                                 lwd = 1.5,
+                                 zones = zones,
+                                 zoneNames = zoneNames))
+  plt1$x.scales$rot <- c(90,90)
+  plt1
+
+  # save a copy
+  pdf("figures/geoarchaeology_stratigraphic_plot_granulometry.pdf",
+      width = 4,
+      height = 5)
+      # res = 300,
+      # antialias = "cleartype")
+  print(plt1)
+  dev.off()
+
+  # We'll use 'coniss', a stratigraphically constrained cluster
+  # analysis by method of incremental sum of squares
+
+  diss <- dist(na.omit(plotting_data))
+  clust <- rioja::chclust(diss, method = "coniss")
+  # broken stick model to suggest significant zones, 3?
+  # bstick(clust) # look for a sharp elbow, that's the ideal number of clusters
+  # save a copy
+  pdf("figures/geoarchaeology_stratigraphic_plot_granulometry_cluster.pdf",
+      # width = 6,
+      height = 6)
+  #res = 300,
+  #antialias = "cleartype")
+  print(plot(clust, hang = -1))
+  dev.off()
+
+  plot(clust, hang = -1)
+
 
 }
 
@@ -1448,109 +1592,59 @@ plot_geoarchaeology_data <- function(prepared_geoarchaeology_data){
                           # Heated.litre,
                           Artefacts,
                           Burnt.Chert,
-                          # Charcoal.Litre,
-                          #Charcoal.Litre.log,
-                          # Charcoal.g,
+                          #Charcoal.Litre,
+                          Charcoal.Litre.log,
+                          #Charcoal.g,
                           # Artefacts.Litre,
-                          Xlf..m.3.kg.,
-                          mean_d13C_corrected,
-                          SAND,
-                          SILT,
-                          CLAY)
+                          SQB2, # Xlf..m.3.kg.,
+                          mean_d13C_corrected)
 
 
   # make column names informative
   names(plotting_data) <- c(("Stone \nartefacts (n)"),
                             ("Burnt \nartefacts (n)"),
+
+                            "Charcoal log(g/L)",
+
                             ("Magnetic \nsusceptibility \n (SI units)"),
-                            ("\u03B413C \u2030 VPDB"),
-                            ("Sand (%)"),
-                            ("Silt (%)"),
-                            ("Clay (%)"))
+                            ("\u03B413C \u2030 VPDB"))
 
-  exprs <- expression("Stone \nartefacts (n)",  # label for 1st variable
-                      "Burnt \nartefacts (n)",  # label for 2nd variable
-                      "Magnetic \nsusceptibility \n(SI units)",
-                       delta^{13}*C~"\u2030"~VPDB,
-                      "Sand (%)",
-                      "Silt (%)",
-                      "Clay (%)")
+  exprs <-
+    expression("Stone \nartefacts (n)",  # label for 1st variable
+               "Burnt \nartefacts (n)",  # label for 2nd variable
+               "Charcoal log(g/L)",
+               "Magnetic \nsusceptibility \n(SI units)",
+                delta^{13}*C~"\u2030"~VPDB)
 
+  phases_data <- phases()
 
-
-
-  #  lowest dense artefact band at between 2.1 and 2.3m depth near the back wall
-  #  middle dense artefact band occurs between 100 and 150cm depth
-  #  upper dense artefact band occurs between 40 and 70cm depth
-
-
-  zones <- c(0.4, 1.05, # upper
-                        # middle
-             1.72, 2.3) # lower
-  zoneNames <- c("","lower\nband",
-                 "middle\nband",
-                 "upper\nband", "")
+  zones <-  unique(sort(as.vector(t(as.matrix(phases_data[,-1]))[-2])))
+  zoneNames <- c(1,2, 3,4,5,6,7, "phase")
 
 require(analogue)
 # draw basic plot
-invisible(
-plt1 <- analogue::Stratiplot(depth ~ .,
-                  varTypes = "absolute",
-                  labelValues = exprs,
-                  labelRot = 90,
-                  data = plotting_data,
-                  type = c("l","g"),
-                  col = "black",
-                  lwd = 1.5,
-                  zones = zones,
-                  zoneNames = zoneNames))
-plt1$x.scales$rot <- c(90,90)
+  invisible(
+  plt1 <- analogue::Stratiplot(depth ~ .,
+                    ylim = c(0,3),
+                    varTypes = "absolute",
+                    labelValues = exprs,
+                    labelRot = 90,
+                    data = plotting_data,
+                    type = c("l","g"),
+                    col = "black",
+                    lwd = 1.5,
+                    zones = zones,
+                    zoneNames = zoneNames))
+  plt1$x.scales$rot <- c(90,90)
 
-# add tick marks that we will move to the RHS
-invisible(
-plt2 <- analogue::Stratiplot(depth ~ .,
-                   varTypes = "absolute",
-                   labelValues = exprs,
-                   labelRot = 90,
-                   data = plotting_data,
-                   type = c("l","g"),
-                   col = "black",
-                   lwd = 1.5,
-                   yticks = c(0.77, 1.11, 1.75)))
-
-plt2$y.scales$labels <-  c(34.2, 45.3, 56.3)
-plt2$x.scales$rot <- c(90,90)
-
-# make two y axes
-invisible(
-plt3 <- latticeExtra::doubleYScale(plt1,
-                                   plt2,
-                                   add.axis=T))
-
-plt3 <- update(plt3, par.settings = simpleTheme(col = c("black", "black")))
-plt3
-
-# make space for the long titles at the top
-# https://stat.ethz.ch/pipermail/r-help/2005-September/078334.html
-trellis.par.set(theme = col.whitebg())
-lw <- list(left.padding = list(x = 0.1, units = "inches"))
-lw$right.padding <- list(x = 0.1, units = "inches")
-lh <- list(bottom.padding = list(x = 0, units = "inches"))
-lh$top.padding <- list(x = 0.15, units = "inches")
-lattice.options(layout.widths = lw, layout.heights = lh)
-
-# save a copy
-png("figures/geoarchaeology_stratigraphic_plot.png",
-    width = 4000,
-    height = 2000,
-    res = 300,
-    antialias = "cleartype")
-print(plt3)
-dev.off()
-
-# put a copy on screen
-# print(plt3)
-
+  # save a copy
+  pdf("figures/geoarchaeology_stratigraphic_plot.pdf",
+      # width = 10,
+      height = 6)
+  #res = 300,
+  #antialias = "cleartype")
+  print(plt1)
+  dev.off()
 
 
 }

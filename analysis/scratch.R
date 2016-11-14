@@ -1386,6 +1386,37 @@ Stratiplot(Age ~ .,
            varTypes = "absolute",
            type = "h")
 
+### Phase depths from ZJ SOM and bayesian model figure #####
+
+# •	band 1 is the archaeologically sterile sand at the base of the deposit (4.6–2.6 m depth);
+# •	band 2 is the lowest dense artefact layer (2.6–2.15 m depth);
+# •	band 3 represents a ~65 cm-thick layer of lower lithic abundance (2.1–1.55 m depth);
+# •	band 4 is the middle dense artefact layer (1.55–0.95 m depth);
+# •	band 5 represents a ~30 cm-thick layer of lowest lithic abundance (0.95–0.70 m depth);
+# •	band 6 is the uppermost dense artefact layer (0.70–0.35 m depth) and the only phase with a similarly high lithic abundance as the lowest dense artefact layer; and
+# •	band 7 represents the uppermost 35 cm of deposit, which consists mostly of shell midden
+
+phases <- frame_data(
+  ~phase, ~upper, ~lower,
+     1,     2.6,    4.6,
+     2,     2.15,   2.6,
+     3,     1.55,   2.1,
+     4,     0.95,   1.55,
+     5,     0.7,    0.95,
+     6,     0.35,   0.7,
+     7,     0.0,    0.35)
+
+
+
+
+# We'll use 'coniss', a stratigraphically constrained cluster
+# analysis by method of incremental sum of squares
+
+diss <- dist(na.omit(plotting_data))
+clust <- rioja::chclust(diss, method = "coniss")
+# broken stick model to suggest significant zones, 3?
+bstick(clust) # look for a sharp elbow, that's the ideal number of clusters
+plot(clust, hang = -1)
 
 
 
