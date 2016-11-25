@@ -689,8 +689,8 @@ refits <- function(stone_artefacts_only){
            value = descr,
            -set, -refit)
 
-  refit_data_long$artefact_Lnums <-  gsub(" ", "",
-                                          stringr::str_extract(refit_data_long$descr,
+  refit_data_long$artefact_Lnums <-
+    gsub(" ", "", stringr::str_extract(refit_data_long$descr,
                                              "\\bL.* \\b"))
 
   refit_data_long$artefact_Lnums[ refit_data_long$artefact_Lnums == "L3024.2"] <- "L3024"
@@ -820,11 +820,11 @@ refits <- function(stone_artefacts_only){
                     colour = viridis(10)[7],
                size = 3) +
 
-    geom_text_repel(data = refit_data_long_coords,
-                    aes(Xnew_flipped,
-                        depth_below_surface,
-                  label = descr),
-                  size = 2.5) +
+    # geom_text_repel(data = refit_data_long_coords,
+    #                 aes(Xnew_flipped,
+    #                     depth_below_surface,
+    #               label = descr),
+    #               size = 2.5) +
 
     scale_y_reverse(limits = c(3, 0),
                     breaks = rev(seq(0, 3, 0.5))) +
@@ -897,11 +897,11 @@ refits <- function(stone_artefacts_only){
                colour = viridis(10)[7],
                size = 3) +
 
-    geom_text_repel(data = refit_data_long_coords,
-                    aes(Xnew_flipped,
-                        Ynew,
-                        label = descr),
-                    size = 2.5) +
+    # geom_text_repel(data = refit_data_long_coords,
+    #                 aes(Xnew_flipped,
+    #                     Ynew,
+    #                     label = descr),
+    #                 size = 2.5) +
 
     coord_equal() +
     theme_minimal()

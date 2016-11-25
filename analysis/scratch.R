@@ -1418,6 +1418,39 @@ clust <- rioja::chclust(diss, method = "coniss")
 bstick(clust) # look for a sharp elbow, that's the ideal number of clusters
 plot(clust, hang = -1)
 
+##---------------------------------------------------------------
+# phases of grind stones from Ebbe
+library(tidyverse)
+library(readxl)
+gs_phases <- read_excel("E:/My Documents/My UW/Research/1206 M2 excavation/1506 M2 excavation/GSPhases_BM1.xlsx")
+# get the Spit/square, then find the depth below surface, then match with phases
+
+phases <- phases()
+
+# get GS from total station data
+grindind_stones <-
+stone_artefacts_only %>%
+  filter(grepl("GS", Description)) %>%
+  group_by(Description, square, spit) %>%
+  summarise(mean_Elevation = mean(Elevation, na.rm = TRUE),
+            mean_depth_below_ground_surface = mean(depth_below_ground_surface)) %>%
+  mutate(square_spit = paste0(square, "_", spit))
+
+# join depths from total station data to Ebbe's data
+gs_phases_sep <-
+gs_phases %>%
+  separate(`Spit/Square`, c("square", "spit"), "/") %>%
+  mutate(square_spit = paste0(square, "_", spit))
+
+# joint to get depths for each square/spit
+grinding_stones_depths <-
+gs_phases_sep %>%
+left_join(grindind_stones,
+          by = "square_spit")
+
+# join to get phases
+grinding_stones_depths$mean_depth_below_ground_surface
+
 
 
 
