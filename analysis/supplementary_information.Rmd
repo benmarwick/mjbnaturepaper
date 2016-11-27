@@ -173,6 +173,8 @@ plot_granulometry_data(prepared_geoarchaeology_data)
 
 plot_geoarchaeology_data(prepared_geoarchaeology_data)
 
+# import PDFs into EDF SVG and resize to fit
+
 ```
 
 

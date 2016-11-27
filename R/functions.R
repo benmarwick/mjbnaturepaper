@@ -1435,6 +1435,7 @@ prepare_geoarchaeology_data <- function(cleaned_rotated_points_in_main_excavatio
 #'
 #' @import analogue
 #' @import lattice
+#' @import tibble
 #' @importFrom latticeExtra doubleYScale
 #'
 #'
@@ -1451,16 +1452,39 @@ phases <- function(phases){
 # •	band 6 is the uppermost dense artefact layer (0.70–0.35 m depth) and the only phase with a similarly high lithic abundance as the lowest dense artefact layer; and
 # •	band 7 represents the uppermost 35 cm of deposit, which consists mostly of shell midden
 
+# But we're going to read the depths off the
+# stone artefacts plot because ZJ's depths are
+# for the front, this is what CC suggests
+# for C2:
 
-phases <- frame_data(
-  ~phase, ~upper, ~lower,
-  1,     2.6,    3.0,
-  2,     2.15,   2.6,
-  3,     1.55,   2.15,
-  4,     0.95,   1.55,
-  5,     0.7,    0.95,
-  6,     0.35,   0.7,
-  7,     0.0,    0.35)
+
+
+phases <- tibble::frame_data(
+    ~phase, ~upper, ~lower,
+       1,     2.3,    2.7,
+
+       2,     1.9,    2.3,
+
+       3,     1.5,    1.9, # change CC's 2.0,
+
+       4,     1.2,    1.5, # change CC's 1.4,
+
+       5,     0.85,    1.2,
+
+       6,     0.5,    0.85, #change CC's 0.8,
+
+       7,     0,      0.5)
+
+
+# phases <- frame_data(
+#   ~phase, ~upper, ~lower,
+#   1,     2.6,    3.0,
+#   2,     2.15,   2.6,
+#   3,     1.55,   2.15,
+#   4,     0.95,   1.55,
+#   5,     0.7,    0.95,
+#   6,     0.35,   0.7,
+#   7,     0.0,    0.35)
 
 return(phases)
 
