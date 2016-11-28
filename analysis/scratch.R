@@ -1451,6 +1451,118 @@ left_join(grindind_stones,
 # join to get phases
 grinding_stones_depths$mean_depth_below_ground_surface
 
+##---------------------------------------------------------------
+
+# explore artefact mass and depths
+
+
+# Resampling ANOVA
+size_sorting_stat_test_output <-
+  size_sorting_stat_test(spit_depths_B6_output, the_n = 0)
+
+# Bayesian linear regression for depth and mass
+only_spits_with_more_than_n_artefacts <-
+  size_sorting_stat_test_output$only_spits_with_more_than_n_artefacts
+
+library(rstanarm)
+stan_lm_output <-
+  stan_lm(Mass ~ depth_below_surface,
+          data = only_spits_with_more_than_n_artefacts,
+          prior = NULL,
+          chains = 1,
+          cores = 2,
+          seed = 1)
+
+# slope
+slope <- as.data.frame(stan_lm_output)$depth_below_surface
+mean_slope <- mean(slope)
+ninetyfive_credible_slope <- quantile(slope, c(0.025, 0.975))
+
+# r-squared
+r_squared <- as.data.frame(stan_lm_output)$R2
+mean_r_squared <- mean(r_squared)
+ninetyfive_credible_r_squared <-  quantile(r_squared, c(0.025, 0.975))
+
+size_sorting_plotted_B6 <- readxl::read_excel("data\\stone_artefact_data\\size_sorting_plotted_from_B6.xlsx")
+
+# get depths
+size_sorting_plotted_B6 <-
+  left_join(size_sorting_plotted_B6,
+            spit_depths_B6_output,
+            by = c("Spit" = "spit") )
+
+# split to look at upper band of artefacts and lower band of artefacts
+upper_band <- size_sorting_plotted_B6 %>%
+  filter(depth_below_surface > 0.5 &
+           depth_below_surface < 1.25) %>%
+  stan_lm(Mass ~ depth_below_surface,
+          data = .,
+          prior = NULL,
+          chains = 1,
+          cores = 2,
+          seed = 1)
+
+lower_band <- size_sorting_plotted_B6 %>%
+  filter(depth_below_surface > 1.8 &
+           depth_below_surface < 2.6) %>%
+  stan_lm(Mass ~ depth_below_surface,
+          data = .,
+          prior = NULL,
+          chains = 1,
+          cores = 2,
+          seed = 1)
+
+
+# note fining up of sediments when artefacts peak
+
+# --------------------------------------------------------------------
+# chi-sq on artefact raw matererial and phases
+
+
+# chi-sq for raw material by depth
+raw_materials_technology_chi <-
+plot_raw_materials_technology$B6_raw_materials_plot_data %>%
+  dplyr::select(depth_below_surface, `Raw material`, value) %>%
+  arrange(desc(depth_below_surface))
+
+
+# group spits into phases
+
+raw_materials_technology_chi$depth_below_surface_round <-
+  round(raw_materials_technology_chi$depth_below_surface, 2) * 100
+
+# get start and end of phases
+start <- the_phases$upper * 100
+end <- c(350, (the_phases$lower * 100)[-1]) # extend depth to base of artefact
+
+# Compute which layer each spit belongs in using the
+# IRanges package
+
+# source("https://bioconductor.org/biocLite.R")
+# biocLite("GenomicRanges")
+library(IRanges)
+depth_values <-
+  IRanges(na.omit(raw_materials_technology_chi$depth_below_surface_round),
+          width = 1,
+          names = na.omit(raw_materials_technology_chi$depth_below_surface_round))
+ranges_for_phases <-
+  IRanges(start = start,
+          end = end,
+          names = the_phases$phase)
+olaps <- findOverlaps(depth_values, ranges_for_phases)
+phases_from_depths <- subjectHits(olaps)
+
+raw_materials_technology_chi$phases_from_depths <- phases_from_depths
+
+# focus on  Qtztite, Qtz, Silcrete, Chert
+raw_materials_technology_chi %>%
+  filter(!`Raw material` %in% c('Glass', 'Mica', 'Volcanic')) %>%
+  dplyr::select(phases_from_depths, `Raw material`, value) %>%
+  group_by(`Raw material`, phases_from_depths ) %>%
+  dplyr::summarise(artefact_count = sum(as.numeric(value))) %>%
+  spread(key = `Raw material`, value = artefact_count, fill = 0) %>%
+  dplyr::select(-phases_from_depths) %>%  # sum to get total n
+  chisq.test()
 
 
 

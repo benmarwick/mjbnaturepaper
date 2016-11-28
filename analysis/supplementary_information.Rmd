@@ -24,6 +24,7 @@ Clarkson et al. XXXX
 ```{r prepare_data}
 # prepare data, if interactive, setwd to source doc
 library(mjbnaturepaper)
+library(tidyverse)
 
 # read in from raw data
 total_station_data_2015 <- read_2015_total_station_data("data/total_station_csv_2015")
@@ -72,7 +73,14 @@ spit_depths_B6_output <- spit_depths_B6(points_in_main_excavation_area)
 
 B6_raw_materials <- readr::read_csv("data/stone_artefact_data/B6_raw_material_table.csv")
 
+plot_raw_materials_technology <- 
 raw_materials_technology_plots(B6_raw_materials, spit_depths_B6_output)
+
+# chi-sq for raw material by phase
+chi_sq_raw_material_by_phase_tbl <- chi_sq_raw_material_by_phase(plot_raw_materials_technology)
+
+chisq.test(chi_sq_raw_material_by_phase_tbl)
+
 
 # These plots are arranged in inkscape to create the final figure EDF-4
 
@@ -91,73 +99,28 @@ Associations were found between 19 artefacts (lower = 17, middle = 2) indicating
 # check aspect ratio of these plots
 refit_output <- refits(stone_artefacts_only)
 
+# median distance between refitting artefact fragments
+median_refit_dist <- 
+median(refit_output$refit_data_coords_wide$refit_dists_m)
+ <- 
+mad(refit_output$refit_data_coords_wide$refit_dists_m)
+
+
 # Vertical distance between refitted pieces
-refit_vertical_dist <- 
+refit_vertical_dist_median <- 
 median(abs(with(refit_output$refit_data_coords_wide, Elevation.x  -  Elevation.y)))
 
+refit_vertical_dist_mad <- 
+mad(abs(with(refit_output$refit_data_coords_wide, Elevation.x  -  Elevation.y)))
+mad_refit_dist
 # Size sorting ---------------------------------------------
 
 # size sorting plot with smoother
 size_sorting_plot(spit_depths_B6_output)
 
-# Resampling ANOVA
-size_sorting_stat_test_output <- 
-size_sorting_stat_test(spit_depths_B6_output, the_n = 0)
-
-# Bayesian linear regression for depth and mass
-only_spits_with_more_than_n_artefacts <- 
-size_sorting_stat_test_output$only_spits_with_more_than_n_artefacts
-
-library(rstanarm)
-stan_lm_output <-
-stan_lm(Mass ~ depth_below_surface,
-        data = only_spits_with_more_than_n_artefacts,
-        prior = NULL,
-        chains = 1,
-        cores = 2,
-        seed = 1)
-
-# slope
-slope <- as.data.frame(stan_lm_output)$depth_below_surface
-mean_slope <- mean(slope)
-ninetyfive_credible_slope <- quantile(slope, c(0.025, 0.975))
-
-# r-squared
-r_squared <- as.data.frame(stan_lm_output)$R2
-mean_r_squared <- mean(r_squared)
-ninetyfive_credible_r_squared <-  quantile(r_squared, c(0.025, 0.975))
-
-size_sorting_plotted_B6 <- readxl::read_excel("data\\stone_artefact_data\\size_sorting_plotted_from_B6.xlsx")
-
-# get depths
-size_sorting_plotted_B6 <-
-  left_join(size_sorting_plotted_B6,
-            spit_depths_B6_output,
-            by = c("Spit" = "spit") )
-
-# split to look at upper band of artefacts and lower band of artefacts
-upper_band <- size_sorting_plotted_B6 %>%
-  filter(depth_below_surface > 0.5 &
-         depth_below_surface < 1.25) %>%
-  stan_lm(Mass ~ depth_below_surface,
-          data = .,
-          prior = NULL,
-          chains = 1,
-          cores = 2,
-          seed = 1)
-
-lower_band <- size_sorting_plotted_B6 %>%
-  filter(depth_below_surface > 1.8 &
-           depth_below_surface < 2.6) %>%
-  stan_lm(Mass ~ depth_below_surface,
-          data = .,
-          prior = NULL,
-          chains = 1,
-          cores = 2,
-          seed = 1)
-
-
 ```
+
+
 
 
 ## Extended Data Figure 9

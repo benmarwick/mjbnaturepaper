@@ -925,11 +925,26 @@ refits <- function(stone_artefacts_only){
          aes(refit_dists_m)) +
     geom_histogram() +
     theme_minimal() +
-    xlab("Distance between \nrefitting sets (m)") +
+    xlab("Straight-line distance \nbetween refitting sets (m)") +
     ylab("Count")
 
-  ggsave("figures/refit_dists_histogram.png", width = 15)
+  ggsave("figures/refit_dists_histogram.svg", width = 15)
          #antialias = "cleartype")
+
+  # histogram of vertical distances of refits
+  refit_data_coords_wide$vertical_dists_m <-
+  (abs(with(refit_data_coords_wide, Elevation.x  -  Elevation.y)))
+
+  #  plot
+  ggplot(refit_data_coords_wide,
+         aes(vertical_dists_m)) +
+    geom_histogram() +
+    theme_minimal() +
+    xlab("Vertical distance between \nrefitting sets (m)") +
+    ylab("Count")
+
+  ggsave("figures/refit_vert_dists_histogram.svg", width = 15)
+  #antialias = "cleartype")
 
   # what is the plunge angle of the refits?
   # compute from elevations and X (Easting.x or Xnewflipped)
@@ -2591,11 +2606,78 @@ raw_materials_technology_plots <- function(B6_raw_materials,
                         size = "first"))
   dev.off()
 
+return(list(B6_raw_materials_plot_data = B6_raw_materials_plot_data,
+            B6_technology_plot_data = B6_technology_plot_data))
 
 
+}
+
+
+
+#' Chi-sq for raw material by depth
+#'
+#' @param plot_raw_materials_technology
+#'
+#' @return
+#' @import tidyverse
+#' @export
+#'
+#' @examples
+chi_sq_raw_material_by_phase <- function(plot_raw_materials_technology){
+
+
+  # chi-sq for raw material by depth
+  raw_materials_technology_chi <-
+    plot_raw_materials_technology$B6_raw_materials_plot_data %>%
+    dplyr::select(depth_below_surface, `Raw material`, value) %>%
+    arrange(desc(depth_below_surface))
+
+
+  # group spits into phases
+
+  raw_materials_technology_chi$depth_below_surface_round <-
+    round(raw_materials_technology_chi$depth_below_surface, 2) * 100
+
+  # get start and end of phases
+  the_phases <- phases()
+  start <- the_phases$upper * 100
+  end <- c(350, (the_phases$lower * 100)[-1]) # extend depth to base of artefact
+
+  # Compute which layer each spit belongs in using the
+  # IRanges package
+
+  # source("https://bioconductor.org/biocLite.R")
+  # biocLite("GenomicRanges")
+  require(IRanges)
+  depth_values <-
+    IRanges(na.omit(raw_materials_technology_chi$depth_below_surface_round),
+            width = 1,
+            names = na.omit(raw_materials_technology_chi$depth_below_surface_round))
+  ranges_for_phases <-
+    IRanges(start = start,
+            end = end,
+            names = the_phases$phase)
+  olaps <- findOverlaps(depth_values, ranges_for_phases)
+  phases_from_depths <- subjectHits(olaps)
+
+  raw_materials_technology_chi$phases_from_depths <- phases_from_depths
+
+  # focus on  Qtztite, Qtz, Silcrete, Chert
+  chi_sq_raw_material_by_phase_output <-
+  raw_materials_technology_chi %>%
+    dplyr::filter(!`Raw material` %in% c('Glass', 'Mica', 'Volcanic')) %>%
+    dplyr::select(phases_from_depths, `Raw material`, value) %>%
+    group_by(`Raw material`, phases_from_depths ) %>%
+    dplyr::summarise(artefact_count = sum(as.numeric(value))) %>%
+    tidyr::spread(key = `Raw material`, value = artefact_count, fill = 0) %>%
+    dplyr::select(-phases_from_depths)
+
+  return(chi_sq_raw_material_by_phase_output)
 
 
 
 }
+
+
 
 
