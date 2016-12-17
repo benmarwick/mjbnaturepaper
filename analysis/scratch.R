@@ -1425,7 +1425,8 @@ library(readxl)
 gs_phases <- read_excel("E:/My Documents/My UW/Research/1206 M2 excavation/1506 M2 excavation/GSPhases_BM1.xlsx")
 # get the Spit/square, then find the depth below surface, then match with phases
 
-phases <- phases()
+# but these are for the front e.g. C5 and C6
+phases <- mjbnaturepaper::phases()
 
 # get GS from total station data
 grindind_stones <-
@@ -1442,14 +1443,59 @@ gs_phases %>%
   separate(`Spit/Square`, c("square", "spit"), "/") %>%
   mutate(square_spit = paste0(square, "_", spit))
 
-# joint to get depths for each square/spit
-grinding_stones_depths <-
-gs_phases_sep %>%
-left_join(grindind_stones,
-          by = "square_spit")
+# first, joint by grinding artefact ID, clean them up in Ebbe's data
+GS <- gs_phases_sep[grep("GS \\d", gs_phases_sep$`Artefact no.`), ]
+GS$`Artefact no.`
 
-# join to get phases
-grinding_stones_depths$mean_depth_below_ground_surface
+# get Ebbe's GS00 to match format in total station descr.
+library(stringr)
+GS$GS_n <- str_extract(GS$`Artefact no.`, "GS\\s\\d{1,2}")
+GS$GS_n <- sub("\\s", "", GS$GS_n )
+
+# create same col in ts data
+grindind_stones$GS_n <- str_extract(grindind_stones$Description, "GS\\d{1,2}")
+
+
+# join with total station data
+grinding_stones_depths <-
+  GS %>%
+  left_join(grindind_stones,
+            by = "GS_n")
+
+# join depths to get phases
+library(fuzzyjoin)
+
+gs_deps <- as.numeric(na.omit(grinding_stones_depths$mean_depth_below_ground_surface))
+
+gs_deps_phases <-
+  fuzzy_left_join(data.frame(gs_deps),
+                  phases,
+                  by = c("gs_deps" = "upper",
+                         "gs_deps" = "lower"),
+                  match_fun = list(`>=`, `<=`)) %>%
+  distinct()
+
+
+
+# joint phases with full gs data
+gs_deps_phases_dets <-
+grinding_stones_depths %>%
+  left_join(gs_deps_phases,
+            by = c('mean_depth_below_ground_surface' = 'gs_deps'))
+
+# what are we missing?
+missing_gs <- gs_deps_phases_dets[is.na(gs_deps_phases_dets$phase), ]$GS_n
+not_missing_gs <- gs_deps_phases_dets$GS_n
+
+[1] "GS36" "GS12" "GS36" "GS70" "GS74" "GS85" "GS86" "GS87"
+
+# check total station data
+stone_artefacts_only %>%
+  filter(grepl(paste0(missing_gs, collapse = "|"), Description))
+# nothing
+
+# so let's get the phase of the spit for those ones with missing ts data
+
 
 ##---------------------------------------------------------------
 
