@@ -1449,11 +1449,37 @@ join_total_station_data_to_Ebbes_data <-
             by = c("Description_short" = "square_spit_gs")) %>%
   mutate(Ebbes_artefact_number = as.numeric(sub("[A-Z]+|[A-Z]+//s", "", `Artefact no.`)))
 
+# also want unplotted grindstones with phases, find total station depth of these artefacts by averaging from EL of containing square
+
+# get sq_sp for joining
+cleaned_rotated_points_in_main_excavation_area$sq_sp <-
+  gsub("^[A-Z]{1,2}_|_[A-Z0-9]+$", "", cleaned_rotated_points_in_main_excavation_area$Description)
+
+# join UP grinding stones with all points
+up_grinding <-
+  gs_phases %>%
+  filter(grepl("UP", `Artefact no.`)) %>%
+  mutate(sq_sp = gsub("/", "_", `Spit/Square`)) %>%
+  left_join(cleaned_rotated_points_in_main_excavation_area, by = 'sq_sp') %>%
+  filter(grepl("EL", Description)) %>%
+  group_by(`Artefact no.`, sq_sp) %>%
+  summarize(Easting = mean(Easting, na.rm = TRUE),
+            Northing = mean(Northing, na.rm = TRUE),
+            Elevation  = mean(Elevation, na.rm = TRUE),
+            Xnew_flipped = mean(Xnew_flipped, na.rm = TRUE),
+            depth_below_ground_surface = mean(depth_below_ground_surface, na.rm = TRUE)) %>%
+  left_join(gs_phases, by = "Artefact no.")
+
+# combine unplotted pieces with join_total_station_data_to_Ebbes_data
+join_total_station_data_to_Ebbes_data_and_UPs <-
+full_join(join_total_station_data_to_Ebbes_data,
+          up_grinding)
+
 
 # join depths from Ebbe's data plus total station data with the phases table, to get phases into Ebbe's data
 library(fuzzyjoin)
 
-ts_depths <- as.numeric(na.omit(join_total_station_data_to_Ebbes_data$depth_below_ground_surface))
+ts_depths <- as.numeric(na.omit(join_total_station_data_to_Ebbes_data_and_UPs$depth_below_ground_surface))
 
 ebbes_artefacts_with_phases <-
   fuzzy_left_join(data.frame(ts_depths),
@@ -1466,14 +1492,15 @@ ebbes_artefacts_with_phases <-
 # join phases back to fuller data set
 ebbes_artefacts_with_phases <-
   inner_join(ebbes_artefacts_with_phases,
-            join_total_station_data_to_Ebbes_data,
+             join_total_station_data_to_Ebbes_data_and_UPs,
             by = c("ts_depths" = "depth_below_ground_surface")) %>%
   select(-code) %>%
   # get one row per Ebbe-ID and phase
   group_by(`Artefact no.`, phase, Notes) %>%
   slice(1)
 
-# save these, then deal with the ones we didn't catch yet
+# save these, now includes all UP GS,
+# then deal with the ones we didn't catch yet
 write.csv(ebbes_artefacts_with_phases,
           "C:/Users/bmarwick/Desktop/Ebbes_artefacts_with_phases_easy_ones.csv")
 
@@ -1549,35 +1576,8 @@ check_me <- "GS74$"
 cleaned_rotated_points_in_main_excavation_area %>%
   filter(grepl(check_me, Description))
 
-# also want UP phases, find total station depth by averaging
-# from EL of containing square
+#### chatting with EH on 11 Jan 2017... -------------------------------------------------
 
-# get sq_sp for joining
-cleaned_rotated_points_in_main_excavation_area$sq_sp <-
-  gsub("^[A-Z]{1,2}_|_[A-Z0-9]+$", "", cleaned_rotated_points_in_main_excavation_area$Description)
-
-# join UP grinding stones with all points
-up_grinding <-
-gs_phases %>%
-  filter(grepl("UP", `Artefact no.`)) %>%
-  mutate(sq_sp = gsub("/", "_", `Spit/Square`)) %>%
-  left_join(cleaned_rotated_points_in_main_excavation_area, by = 'sq_sp') %>%
-  filter(grepl("EL", Description)) %>%
-  group_by(`Artefact no.`, sq_sp) %>%
-  summarize(Easting_mean = mean(Easting, na.rm = TRUE),
-         Northing_mean = mean(Northing, na.rm = TRUE),
-         Elevation_mean = mean(Elevation, na.rm = TRUE),
-         Xnew_flipped_mean = mean(Xnew_flipped, na.rm = TRUE),
-         depth_below_ground_surface_mean = mean(depth_below_ground_surface, na.rm = TRUE))
-
-ggplot(up_grinding,
-       aes(Xnew_flipped_mean,
-           depth_below_ground_surface_mean)) +
-  geom_point() +
-  scale_y_reverse() +
-  ylim(3,0) +
-  geom_point() +
-  geom_text_repel(aes(label = `Artefact no.`))
 
 # also want age phases
 # also want to plot
@@ -1586,13 +1586,13 @@ ggplot(up_grinding,
 # GS74 is probably PF_C6_53_GS53
 
 # got good position data for these
-GS_2012 <- c("GS01",
-             "GS02",
-             "GS03",
-             "GS04",
-             "GS05",
-             "GS06",
-             "GS09",
+GS_2012 <- c("GS1", # not GS01
+             "GS2",
+             "GS3",
+             "GS4",
+             "GS5",
+             "GS6",
+             "GS9",
              "GS10",
              "GS14",
              "GS15",
@@ -1613,34 +1613,46 @@ GS_2012 <- c("GS01",
              "GS49",
              "GS50")
 
-# perhaps missing total station points for these
-GS_problematic <- c(GS 8
-                    R68
-                    R5
-                    UP GS 24
-                    UP GS 25
-                    GS 30
-                    GS 31
-                    GS 33
-                    GS 35
-                    GS 36
-                    GS 32
-                    GS 43
-                    GS 7
-                    GS 13
-                    GS 19
-                    GS 21
-                    GS 22
-                    GS 23
-                    GS 24
-                    GS 26
-                    UP GS 37
-                    UP GS 28
-                    UP GS 29
-                    GS 38
-                    GS 44
-                    GS 45
-                    GS 48)
+# confirm we have them
+sum(grepl(paste0(GS_2012, collapse = "|"), ebbes_artefacts_with_phases$Description))
+length(GS_2012)
+# what are we missing?
+missing_GS_2012 <- GS_2012[!GS_2012 %in% gsub("^[A-Z]{1,2}_[A-Z0-9]{1,2}_[0-9]{1,2}_", "", grep(paste0(GS_2012, collapse = "|"), ebbes_artefacts_with_phases$Description, value = TRUE))]
+# are they in the total station points anywhere?
+check_me <- missing_GS_2012
+cleaned_rotated_points_in_main_excavation_area %>%
+  filter(grepl(paste0(check_me, collapse = "|"), Description))
+# not missing any
+
+
+# perhaps missing total station points for these... needs work!
+GS_problematic <- c("GS 8",
+                    "R68",
+                    "R5",
+                    "UP GS 24",
+                    "UP GS 25",
+                    "GS 30",
+                    "GS 31",
+                    "GS 33",
+                    "GS 35",
+                    "GS 36",
+                    "GS 32",
+                    "GS 43",
+                    "GS 7",
+                    "GS 13",
+                    "GS 19",
+                    "GS 21",
+                    "GS 22",
+                    "GS 23",
+                    "GS 24",
+                    "GS 26",
+                    "UP GS 37",
+                    "UP GS 28",
+                    "UP GS 29",
+                    "GS 38",
+                    "GS 44",
+                    "GS 45",
+                    "GS 48")
 
 # these are the 2015 ones
 six <- c("GS53",
