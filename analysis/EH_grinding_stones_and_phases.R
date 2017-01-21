@@ -4,7 +4,7 @@
 # phases of grind stones from Ebbe
 library(tidyverse)
 library(readxl)
-gs_phases <- read_excel("E:/My Documents/My UW/Research/1206 M2 excavation/data/1506 M2 excavation/GSPhases_BM1.xlsx")
+gs_phases <- read_excel("E:/My Documents/My UW/Research/1206 M2 excavation/1506 M2 excavation/data/GSPhases_BM1.xlsx")
 names(gs_phases) <- make.names(names(gs_phases))
 # I made some edits to this sheet to make the GS numbers more consistent, and move details added by EH to the codes into a 'notes' column
 
@@ -406,6 +406,96 @@ dev.off()
 # save copy of data
 write.csv(ebbes_artefacts_with_phases_and_ages,
           "E:/My Documents/My UW/Research/1206 M2 excavation/1506 M2 excavation/data/ebbes_artefacts_with_phases_and_ages.csv")
+
+# -------------------------------------------------------------------------
+# have a go at a plot for table 2: Phase distribution of grinding stones by function
+
+library(tidyverse)
+library(readxl)
+gs_table_2 <- read_excel("E:/My Documents/My UW/Research/1206 M2 excavation/1506 M2 excavation/data/GSPhases_BM1.xlsx", sheet = "Sheet2")
+names(gs_table_2) <- make.names(names(gs_table_2))
+
+gs_table_2a <- gs_table_2[2:7, 1:7]
+
+gs_table_2a$Phase.1 <- 0
+
+gs_table_2a_long <- gather(gs_table_2a,
+                           variable,
+                           value,
+                           -Material.processed.)
+
+gs_table_2a_long_cleaner <-
+gs_table_2a_long %>%
+  mutate(value = as.numeric(gsub("-", "0", value)),
+         Material.processed. = gsub(" ", "", Material.processed.)) %>%
+  filter(Material.processed. != "Animal")
+
+gs_table_2a_long_cleaner_wth_perc <-
+gs_table_2a_long_cleaner %>%
+  group_by(variable) %>%
+  mutate(perc = round(value / sum(value) * 100, 1))
+
+# facetted plot of percentages for each phase
+ggplot(gs_table_2a_long_cleaner_wth_perc,
+       aes(variable,
+           perc)) +
+  geom_col() +
+  facet_wrap( ~ Material.processed.) +
+  theme_bw() +
+  theme(axis.text.x=element_text(angle = 90, hjust = 0)) +
+  ggtitle("Percent of grinding stones in each phase with \na specific type of usewear/residue")
+
+# stacked bar plot with counts
+library(viridis)
+ggplot(gs_table_2a_long_cleaner_wth_perc,
+       aes(variable,
+           value,
+           fill = Material.processed.)) +
+  geom_col() +
+  scale_fill_viridis(discrete = TRUE) +
+  theme_bw() +
+  theme(axis.text.x=element_text(angle = 90,
+                                 vjust = 0.3)) +
+  ggtitle("Count of grinding stones in each phase with \nidentifiable  usewear/residue")
+
+# -------------------------------------------------------------------------
+# overall, how many GS in each phase?
+
+cleaned_rotated_points_in_main_excavation_area_GS <-
+  cleaned_rotated_points_in_main_excavation_area %>%
+  filter(grepl("GS", cleaned_rotated_points_in_main_excavation_area$Description)) %>%
+  group_by(Description) %>%
+  slice(1)
+
+# compute phases
+library(fuzzyjoin)
+cleaned_rotated_points_in_main_excavation_area_GS_phases <-
+  fuzzy_left_join(cleaned_rotated_points_in_main_excavation_area_GS,
+                  phases,
+                  by = c("depth_below_ground_surface" = "upper",
+                         "depth_below_ground_surface" = "lower"),
+                  match_fun = list(`>=`, `<=`)) %>%
+  distinct(.keep_all = TRUE)
+
+# deal with the phase 6-7 dating
+cleaned_rotated_points_in_main_excavation_area_GS_phases$phase  <-
+  with(cleaned_rotated_points_in_main_excavation_area_GS_phases,
+       ifelse(phase == 6 | phase == 7,
+              "6-7", phase))
+
+# count GS per phase
+cleaned_rotated_points_in_main_excavation_area_GS_phases_tally <-
+cleaned_rotated_points_in_main_excavation_area_GS_phases %>%
+  left_join(mjb_phase_ages) %>%
+  group_by(phase, age_range, start_up, end_lo) %>%
+  tally() %>%
+  mutate(gs_per_1000_years = n / (start_up - end_lo) * 1000)
+
+
+
+cleaned_rotated_points_in_main_excavation_area_GS_phases_ages <-
+
+
 
 
 
