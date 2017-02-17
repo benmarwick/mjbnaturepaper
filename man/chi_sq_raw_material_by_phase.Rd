@@ -12,4 +12,3 @@ chi_sq_raw_material_by_phase(plot_raw_materials_technology)
 \description{
 Chi-sq for raw material by depth
 }
-

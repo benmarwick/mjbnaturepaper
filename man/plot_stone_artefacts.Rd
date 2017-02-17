@@ -15,4 +15,3 @@ A plot
 \description{
 plot_stone_artefacts
 }
-

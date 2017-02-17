@@ -15,4 +15,3 @@ A data frame
 \description{
 prepare_geoarchaeology_data
 }
-

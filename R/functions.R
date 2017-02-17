@@ -864,6 +864,15 @@ refits <- function(stone_artefacts_only){
   grid.draw(gt)
   dev.off()
 
+  svg("figures/refit_elev1.svg",
+      height = 8,
+      width = 8*1.92)
+  #res = 300,
+  #antialias = "cleartype")
+  grid.draw(gt)
+  dev.off()
+
+
 
   ggsave("figures/refit_elev.svg",
          height = 8,
@@ -2204,7 +2213,10 @@ plot_ages_and_artefacts <- function(osl_ages, c14_ages, stone_artefacts_only){
                group = method,
                colour = method)) +
     stat_poly_eq(data = wanted_C14_and_OSL_plot_excluding, # exclude some from curve fit
-                 aes(label = ..eq.label..), formula = formula,
+                 aes(depth_below_surface,
+                     age,
+                     label = ..eq.label..),
+                 formula = formula,
                  parse = TRUE) +
     geom_text_repel(data = wanted_C14_and_OSL,
                     aes(x = depth_below_surface,
@@ -2218,11 +2230,11 @@ plot_ages_and_artefacts <- function(osl_ages, c14_ages, stone_artefacts_only){
                             paste0(excluding, collapse = "\n")),
              size = 2) +
     theme_minimal(base_size = 14) +
-    scale_color_viridis(discrete=TRUE,
+    viridis::scale_color_viridis(discrete=TRUE,
                         begin =0,
                         end= 1,
                         option = "viridis") +
-    scale_fill_viridis() +
+    viridis::scale_fill_viridis() +
     xlab("Depth below surface (m)") +
     ylab("Age (ka)") +
     # ggtitle(paste0("MJB depth-age plot of C14 and OSL dates \nfrom ",  gsub("\\|", ", ", wanted))) +

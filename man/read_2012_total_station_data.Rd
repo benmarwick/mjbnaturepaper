@@ -15,4 +15,3 @@ a data frame
 \description{
 read_2012_total_station_data
 }
-

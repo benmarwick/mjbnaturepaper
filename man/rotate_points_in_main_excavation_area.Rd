@@ -15,4 +15,3 @@ a data frame
 \description{
 rotate_points_in_main_excavation_area
 }
-

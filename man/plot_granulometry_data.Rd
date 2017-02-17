@@ -15,4 +15,3 @@ plots
 \description{
 plot_granulometry_data
 }
-

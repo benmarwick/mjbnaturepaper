@@ -12,4 +12,3 @@ get_c14_ages(cleaned_rotated_points_in_main_excavation_area)
 \description{
 get_c14_ages
 }
-

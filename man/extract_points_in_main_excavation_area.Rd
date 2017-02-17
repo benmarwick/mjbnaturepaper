@@ -16,4 +16,3 @@ a data frame
 \description{
 extract_points_in_main_excavation_area
 }
-

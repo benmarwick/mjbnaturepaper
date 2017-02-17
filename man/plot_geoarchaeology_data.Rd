@@ -15,4 +15,3 @@ plots
 \description{
 plot_geoarchaeology_data
 }
-

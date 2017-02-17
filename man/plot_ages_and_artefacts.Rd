@@ -12,4 +12,3 @@ plot_ages_and_artefacts(osl_ages, c14_ages, stone_artefacts_only)
 \description{
 plot_ages_and_artefacts
 }
-
