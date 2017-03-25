@@ -493,9 +493,21 @@ cleaned_rotated_points_in_main_excavation_area_GS_phases %>%
 
 
 
-cleaned_rotated_points_in_main_excavation_area_GS_phases_ages <-
+## can you give me a summarised list all the final artefact counts comprising both the 2012 and 2015 assemblages? I want to know the % of grinding stones compared with other lithic tools (I think it is around 4%)?
 
+library(dplyr)
+stone_artefacts_only %>%
+  filter(find != "LINE") %>%
+  group_by(find) %>%
+  tally() %>%
+  mutate(percentage = round(n / sum(n) * 100, 2))
 
+stone_artefacts_only %>%
+  filter(find != "LINE") %>%
+  #group_by(find, year) %>%
+  count(year, find) %>%
+  mutate(percentage = round(n / sum(n) * 100, 2)) %>%
+  arrange(year)
 
 
 
