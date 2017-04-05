@@ -1533,10 +1533,33 @@ raw_materials_technology_chi %>%
 
 
 
+# -------------------------------------------------------------
 
+#  a plot of C14 samples and depths for rows 4-6.
+c14_rows_4_5_5 <-
+cleaned_rotated_points_in_main_excavation_area %>%
+  filter(grepl("C14", Description),
+         grepl("4|5|6", square))
 
+MJB_C14_in_rows_4_6 <-
+ggplot() +
+  geom_point(data = stone_artefacts_only,
+             aes(Xnew_flipped,
+                 -depth_below_ground_surface,
+                 text = Description),
+             colour = "grey80") +
+  geom_point(data = c14_rows_4_5_5,
+             aes(Xnew_flipped,
+                 -depth_below_ground_surface,
+                 text = Description),
+             colour = "red") +
 
+  theme_bw() +
+  xlab("Rows 4-6") +
+  coord_fixed()
 
+library(plotly)
+ggplotly(MJB_C14_in_rows_4_6)
 
 
 
