@@ -269,7 +269,7 @@ rotate_points_in_main_excavation_area <- function(extracted_points_in_main_excav
 #' @return a data frame
 #' @importFrom dplyr %>% filter
 #' @import stringr
-#' @importFrom purrr dmap_if
+#' @importFrom purrrlyr dmap_if
 #' @import tidyr
 #' @import readxl
 #' @export
@@ -666,6 +666,7 @@ plot_stone_artefacts <- function(stone_artefacts_only){
 #' @import tidyr
 #' @import ggplot2
 #' @import ggrepel
+#' @import circular
 #'
 refits <- function(stone_artefacts_only){
 
@@ -1468,13 +1469,13 @@ phases <- function(phases){
 
 ### Phase depths from ZJ SOM and bayesian model figure #####
 
-# •	band 1 is the archaeologically sterile sand at the base of the deposit (4.6–2.6 m depth);
-# •	band 2 is the lowest dense artefact layer (2.6–2.15 m depth);
-# •	band 3 represents a ~65 cm-thick layer of lower lithic abundance (2.1–1.55 m depth);
-# •	band 4 is the middle dense artefact layer (1.55–0.95 m depth);
-# •	band 5 represents a ~30 cm-thick layer of lowest lithic abundance (0.95–0.70 m depth);
-# •	band 6 is the uppermost dense artefact layer (0.70–0.35 m depth) and the only phase with a similarly high lithic abundance as the lowest dense artefact layer; and
-# •	band 7 represents the uppermost 35 cm of deposit, which consists mostly of shell midden
+# band 1 is the archaeologically sterile sand at the base of the deposit (4.6–2.6 m depth);
+# band 2 is the lowest dense artefact layer (2.6–2.15 m depth);
+# band 3 represents a ~65 cm-thick layer of lower lithic abundance (2.1–1.55 m depth);
+# band 4 is the middle dense artefact layer (1.55–0.95 m depth);
+# band 5 represents a ~30 cm-thick layer of lowest lithic abundance (0.95–0.70 m depth);
+# band 6 is the uppermost dense artefact layer (0.70–0.35 m depth) and the only phase with a similarly high lithic abundance as the lowest dense artefact layer; and
+# band 7 represents the uppermost 35 cm of deposit, which consists mostly of shell midden
 
 # But we're going to read the depths off the
 # stone artefacts plot because ZJ's depths are
@@ -2681,8 +2682,8 @@ chi_sq_raw_material_by_phase <- function(plot_raw_materials_technology){
     dplyr::select(phases_from_depths, `Raw material`, value) %>%
     group_by(`Raw material`, phases_from_depths ) %>%
     dplyr::summarise(artefact_count = sum(as.numeric(value))) %>%
-    tidyr::spread(key = `Raw material`, value = artefact_count, fill = 0) %>%
-    dplyr::select(-phases_from_depths)
+    tidyr::spread(key = `Raw material`, value = artefact_count, fill = 0) #%>%
+    #dplyr::select(-phases_from_depths)
 
   return(chi_sq_raw_material_by_phase_output)
 

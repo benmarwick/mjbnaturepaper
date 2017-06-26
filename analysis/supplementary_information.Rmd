@@ -90,7 +90,7 @@ chisq.test(chi_sq_raw_material_by_phase_tbl)
 
 ## Extended Data Figure 8
 
-Associations were found between 19 artefacts (lower = 17, middle = 2) indicating refits and conjoins within the lower two dense artefact layers but not between them. Although artefacts increase in mass slightly with depth overall, change in depth explains only 0.20% of changes in artefact mass. If we look into the upper and lower bands of artefacts separately, we see that ...  
+Associations were found between 19 artefacts (lower = 14, middle = 3) indicating refits and conjoins within the lower two dense artefact layers but not between them. Although artefacts increase in mass slightly with depth overall, change in depth explains only 0.20% of changes in artefact mass. If we look into the upper and lower bands of artefacts separately, we see that ...  
 
 
 ```{r}
