@@ -472,6 +472,12 @@ grid.draw(gt)
 grid.draw(gt)
 dev.off()
 
+#--------------------------------------------------------------------------
+# make the width of the bars in the plot for count of each phase to indicate time period for each phase
+# Oxygen istope wiggle over the top?
+
+
+
 #  ------------------------------------------------------------------------
 
 # save copy of data
