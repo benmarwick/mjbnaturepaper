@@ -4,7 +4,7 @@
 # phases of grind stones from Ebbe
 library(tidyverse)
 library(readxl)
-gs_phases <- read_excel("E:/My Documents/My UW/Research/1206 M2 excavation/1506 M2 excavation/data/GSPhases_BM1.xlsx")
+gs_phases <- read_excel("data/stone_artefact_data/GSPhases_BM1.xlsx")
 names(gs_phases) <- make.names(names(gs_phases))
 # I made some edits to this sheet to make the GS numbers more consistent, and move details added by EH to the codes into a 'notes' column
 
@@ -321,6 +321,70 @@ gs_phases$Artefact.no.[!gs_phases$Artefact.no. %in% ebbes_artefacts_with_phases_
 # [1] "UP GS 1"  "UP GS 38" "GS 85"
 
 #  ------------------------------------------------------------------------
+# 28 June 2017, checking a few things with EH
+
+# how many in each phase
+ebbes_artefacts_with_phases_and_ages %>%
+  group_by(phase) %>%
+  tally
+
+# drop GS 51 though GS 99, keep 53, 56, 73, 74, 75, 79, ie GS_2015
+
+
+# keep these
+keep_gs <- paste0(substr(GS_2015, 1, 2),  " ", substr(GS_2015, 3, 5))
+keep_gs <- keep_gs[-length(keep_gs)]
+
+# drop these
+drop_gs0 <- paste0("GS ", 51:99)
+drop_gs1 <- paste0("GS ", c(17, 42))
+drop_gs2 <- c(drop_gs0, drop_gs1)
+
+# exclude the ones we want to keep from the ones we want to drop
+drop_gs <- drop_gs2[-match(keep_gs,drop_gs2)]
+
+ebbes_artefacts_with_phases_and_ages_analysed <-    # 126 rows
+ebbes_artefacts_with_phases_and_ages %>%            # 142 rows
+  ungroup %>%
+  filter(!Artefact_no %in% drop_gs) %>%
+  filter(!Artefact.no. %in% drop_gs) %>%
+  mutate(N = as.numeric(gsub("[A-Z]", "", Artefact_no))) %>%
+  mutate(Artefact.no. = gsub("UP GS", "UPGS", Artefact.no.))
+
+# how many in each phase
+ebbes_artefacts_with_phases_and_ages_analysed %>%
+  group_by(phase) %>%
+  tally
+
+# check the phases from EH's PNAS suppl tables spreadsheet
+supp_tbl <- read_excel("data/stone_artefact_data/EH_grinding_stone_details.xlsx",
+                       sheet = "Sheet1")
+
+supp_tbl_joined <-
+supp_tbl %>%
+  mutate(`Grinding stone number` = gsub("\\*", "", `Grinding stone number` )) %>%
+  full_join(ebbes_artefacts_with_phases_and_ages_analysed,
+            by = c("Grinding stone number" = "Artefact.no."))  %>%
+  filter(! is.na(Phase) & Phase != "-")
+
+write_csv(supp_tbl_joined, "supp_tbl_joined.csv")
+
+supp_tbl_joined %>%
+  select(`Grinding stone number`, Phase, phase)
+
+# make summary table counts per phase
+supp_tbl_joined %>%
+  group_by(phase_and_age) %>%
+  tally
+
+# points for GS from 2015 not analysed
+gs_2015_not_analysed <-
+ebbes_artefacts_with_phases_and_ages %>%
+  filter(Artefact.no. %in%  drop_gs0[-match(keep_gs, drop_gs0)])
+
+
+
+#------------------------------------------------------------
 
 # plot just these GS with all the flakes, etc.
 # only plot one point per artefact (some artefacts have multiple total station points)
@@ -330,6 +394,7 @@ stone_artefacts_only_one <-
   dplyr::summarise(Xnew_flipped = mean(Xnew_flipped),
                    depth_below_ground_surface = mean(depth_below_ground_surface))
 
+supp_tbl_joined
 
 
 # determined by plotting row C end levels
@@ -346,17 +411,23 @@ p <- ggplot() +
                  depth_below_ground_surface),
              colour = "grey80",
              size = size-2.5) +
+  # grey points for
+  geom_point(data = gs_2015_not_analysed,
+             aes(Xnew_flipped,
+                 depth_below_ground_surface),
+             colour = "grey60",
+             size = size-0.5) +
   # here are our grindstones
-  geom_point(data = ebbes_artefacts_with_phases_and_ages,
+  geom_point(data = supp_tbl_joined,
              aes(Xnew_flipped,
                  depth_below_ground_surface,
                  colour = phase_and_age ),
              size = size-0.5)  +
   # here are the labels for the grindstones
-  geom_text_repel(data = ebbes_artefacts_with_phases_and_ages,
+  geom_text_repel(data = supp_tbl_joined,
                   aes(Xnew_flipped,
                       depth_below_ground_surface,
-                      label = Artefact.no.),
+                      label = `Grinding stone number`),
                   size = 1.5,
                   segment.size = 0.25,
                   segment.alpha = 0.4) +
