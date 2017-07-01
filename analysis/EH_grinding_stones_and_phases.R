@@ -124,6 +124,7 @@ cleaned_rotated_points_in_main_excavation_area$code <- NULL
 
 gs_phases_with_Description <-
   gs_phases %>%
+  mutate(Artefact_no = if_else(Artefact_no == "R68", "NA", Artefact_no)) %>%
   filter(!is.na(Artefact_no)) %>%  # exclude unplotted pieces here
   separate(Spit.Square,
            c("square", "spit"),
@@ -189,8 +190,7 @@ missing <- gsub(" ", "", missing)
 # For these missing ones,
 # the problem seems to be that the square/spit in Ebbe's data
 # doesn't match the square/spit accociated with the artefact ID in the
-# cleaned_rotated_points_in_main_excavation_area. Let's do the unplotted GS first, then
-# come back to those mismatching ones...
+# cleaned_rotated_points_in_main_excavation_area. Let's do the unplotted GS first, then come back to those mismatching ones...
 
 gs_phases_by_artefact_ID_only <-
 gs_phases %>%
@@ -201,7 +201,8 @@ gs_phases %>%
   group_by(Artefact.no., Spit.Square) %>%
   # compute means for multiple points for one GS
   summarise_if(is.numeric, mean, na.rm = TRUE) %>%
-  filter(!is.nan(depth_below_ground_surface)) # gets 22 artefacts
+  filter(!is.nan(depth_below_ground_surface)) %>% # gets 22 artefacts
+  mutate()
 
 ################ combine with missing #################
 
@@ -237,7 +238,7 @@ cleaned_rotated_points_in_main_excavation_area %>%
 
 gs_phases_by_square_spit_only <-
 gs_phases %>%
-  filter(Artefact.no. %in% missing) %>%
+  filter(Artefact.no. %in% c("R68", missing)) %>%
   separate(Spit.Square,
            c("square", "spit"),
            "/",
@@ -365,9 +366,12 @@ supp_tbl %>%
   mutate(`Grinding stone number` = gsub("\\*", "", `Grinding stone number` )) %>%
   full_join(ebbes_artefacts_with_phases_and_ages_analysed,
             by = c("Grinding stone number" = "Artefact.no."))  %>%
-  filter(! is.na(Phase) & Phase != "-")
+  filter(!is.na(Phase) & Phase != "-") %>%
+  filter(!(`Grinding stone number` == "R68" &
+           depth_below_ground_surface  > 2 &
+           `Spit/Square` == "E1/18"))
 
-write_csv(supp_tbl_joined, "supp_tbl_joined.csv")
+=# write_csv(supp_tbl_joined, "supp_tbl_joined.csv")
 
 supp_tbl_joined %>%
   select(`Grinding stone number`, Phase, phase)
@@ -440,7 +444,8 @@ p <- ggplot() +
   ylab("Depth below \nground surface (m)") +
   scale_color_viridis(discrete=TRUE,
                       "phase") +
-  guides(colour = guide_legend(override.aes = list(size = 5))) +
+  guides(colour = guide_legend(override.aes = list(size = 5),
+                               reverse = TRUE)) +
   coord_equal()
 
 row_c = c(2.4, 1.4, 0.4, -0.6, -1.6, -2.6, -3.6)
@@ -481,61 +486,261 @@ dev.off()
 #  ------------------------------------------------------------------------
 
 # save copy of data
-write.csv(ebbes_artefacts_with_phases_and_ages,
-          "E:/My Documents/My UW/Research/1206 M2 excavation/1506 M2 excavation/data/ebbes_artefacts_with_phases_and_ages.csv")
+# write.csv(ebbes_artefacts_with_phases_and_ages,
+#           "E:/My Documents/My UW/Research/1206 M2 excavation/1506 M2 excavation/data/ebbes_artefacts_with_phases_and_ages.csv")
 
 # -------------------------------------------------------------------------
-# have a go at a plot for table 2: Phase distribution of grinding stones by function
+# have a go at a plot for table 2: Phase distribution of grinding stones by function. This is a table that EH has hand-made
 
 library(tidyverse)
 library(readxl)
-gs_table_2 <- read_excel("E:/My Documents/My UW/Research/1206 M2 excavation/1506 M2 excavation/data/GSPhases_BM1.xlsx", sheet = "Sheet2")
-names(gs_table_2) <- make.names(names(gs_table_2))
+gs_table_2 <- read_excel("data/stone_artefact_data/GSPhases_BM1.xlsx", sheet = "Sheet3")
 
-gs_table_2a <- gs_table_2[2:7, 1:7]
+names(gs_table_2) <- gs_table_2[1, ]
+names(gs_table_2)[1] <- "phase"
+gs_table_2 <- gs_table_2[-c(1,nrow(gs_table_2)), -ncol(gs_table_2) ]
 
-gs_table_2a$Phase.1 <- 0
+# delet text in brackets
+gs_table_2 <-
+map_df(gs_table_2, ~gsub("\\s*\\([^\\)]+\\)","", as.character(.x)))
 
-gs_table_2a_long <- gather(gs_table_2a,
+# chr to cols
+gs_table_2[, 2:ncol(gs_table_2)] <-
+  map(gs_table_2[, 2:ncol(gs_table_2)], ~as.numeric(.x))
+
+# we don't want to plot metal unknown, so drop those cols
+
+gs_table_2 <-
+gs_table_2 %>%
+  select(-metal, -unknown)
+
+
+gs_table_2a_long <- gather(gs_table_2,
                            variable,
                            value,
-                           -Material.processed.)
+                           -phase)
 
 gs_table_2a_long_cleaner <-
 gs_table_2a_long %>%
-  mutate(value = as.numeric(gsub("-", "0", value)),
-         Material.processed. = gsub(" ", "", Material.processed.)) %>%
-  filter(Material.processed. != "Animal")
+  mutate(phase = tolower(phase))
+
+# make cumulative sum so we can stack geom_rect nicely
+# xstart, xend
+gs_table_2a_long_cleaner <-
+gs_table_2a_long_cleaner %>%
+  filter(value != 0) %>%
+  group_by(phase) %>%
+  mutate(xstart = c(0, cumsum(value)[-length(value)])) %>%
+  mutate(xend = xstart + value) %>%
+  arrange(phase)
+
 
 gs_table_2a_long_cleaner_wth_perc <-
-gs_table_2a_long_cleaner %>%
-  group_by(variable) %>%
-  mutate(perc = round(value / sum(value) * 100, 1))
+  gs_table_2a_long_cleaner # %>%
+#   group_by(variable) %>%
+#   mutate(perc = round(value / sum(value) * 100, 1)) %>%
+#   filter(phase != "unknown") %>%
+#   filter(!variable %in% c("animal", "unknown", "metal"))
 
 # facetted plot of percentages for each phase
-ggplot(gs_table_2a_long_cleaner_wth_perc,
-       aes(variable,
-           perc)) +
-  geom_col() +
-  facet_wrap( ~ Material.processed.) +
-  theme_bw() +
-  theme(axis.text.x=element_text(angle = 90, hjust = 0)) +
-  ggtitle("Percent of grinding stones in each phase with \na specific type of usewear/residue")
+# ggplot(gs_table_2a_long_cleaner_wth_perc,
+#        aes(variable,
+#            perc)) +
+#   geom_col() +
+#   facet_wrap( ~ phase) +
+#   theme_bw() +
+#   theme(axis.text.x=element_text(angle = 90, hjust = 0)) +
+#   ggtitle("Percent of grinding stones in each phase with \na specific type of usewear/residue")
 
 # stacked bar plot with counts
-library(viridis)
-ggplot(gs_table_2a_long_cleaner_wth_perc,
-       aes(variable,
-           value,
-           fill = Material.processed.)) +
-  geom_col() +
-  scale_fill_viridis(discrete = TRUE) +
-  theme_bw() +
-  theme(axis.text.x=element_text(angle = 90,
-                                 vjust = 0.3)) +
-  ggtitle("Count of grinding stones in each phase with \nidentifiable  usewear/residue")
+# library(viridis)
+# ggplot(gs_table_2a_long_cleaner_wth_perc,
+#        aes(phase,
+#            value,
+#            fill = variable)) +
+#   geom_col() +
+#   scale_fill_viridis(discrete = TRUE) +
+#   theme_bw() +
+#   theme(axis.text.x=element_text(angle = 90,
+#                                  vjust = 0.3)) +
+#   ggtitle("Count of grinding stones in each phase with\nidentifiable usewear/residue")
 
 # -------------------------------------------------------------------------
+# make it into a time series
+gs_table_2a_long_cleaner_wth_perc_with_ages <-
+gs_table_2a_long_cleaner_wth_perc %>%
+  separate(phase, c("word", "phase_number"), sep = " ") %>%
+  mutate(phase_number = gsub("/", "-", phase_number),
+         material = variable) %>%
+  left_join(mjb_phase_ages, by = c('phase_number' = 'phase')) %>%
+  group_by(phase_number) %>%
+  mutate(phase_mid_point = end_lo + (start_lo - end_lo)/2)
+
+# labels
+plot_x_axis_breaks <-
+seq(0, max(gs_table_2a_long_cleaner_wth_perc_with_ages$start_lo, na.rm=TRUE), 1e4)
+plot_x_axis_breaks <- c(plot_x_axis_breaks, max(plot_x_axis_breaks))
+plot_x_axis_limits <- c(0, max(plot_x_axis_breaks) )
+base_size <- 8
+phase_labels <- data_frame(phase_mid_point = rev(unique(na.omit(gs_table_2a_long_cleaner_wth_perc_with_ages$phase_mid_point))),
+                           phase_labels = rev(unique(na.omit(gs_table_2a_long_cleaner_wth_perc_with_ages$phase_number))))
+
+library(ggplot2)
+library(viridis)
+
+ggplot(gs_table_2a_long_cleaner_wth_perc_with_ages) +
+  geom_rect(aes(xmin = end_lo,
+                xmax = start_lo,
+                ymin = xstart,
+                ymax = xend,
+                fill = material)) +
+  scale_fill_viridis(discrete = TRUE,
+                      "variable") +
+  scale_x_continuous(breaks = plot_x_axis_breaks,
+                     labels = plot_x_axis_breaks / 1000) +
+  theme_bw(base_size)
+
+# add MIS, d18O, sea levels
+library(gsloid)
+library(glue)
+
+# subset the MIS data for the last 80 ka years
+mis_last_90ka <- LR04_MISboundaries[LR04_MISboundaries$LR04_Age_ka_start <= 90, ]
+
+gs_plot <-
+ggplot() +
+  annotate("rect",
+           xmin = mis_last_90ka$LR04_Age_ka_end * 1000,
+           xmax = mis_last_90ka$LR04_Age_ka_start * 1000,
+           ymin = -Inf,
+           ymax = Inf,
+           alpha = .2,
+           fill = c(rep(c("grey70", "white"),
+                      2), c("grey70", "white"))) +
+  geom_rect(data = gs_table_2a_long_cleaner_wth_perc_with_ages,
+            aes(xmin = end_lo,
+                xmax = start_lo,
+                ymin = xstart,
+                ymax = xend,
+                fill = material)) +
+  annotate("text",
+           x = phase_labels$phase_mid_point,
+           y = 2,
+           label = phase_labels$phase_labels) +
+  scale_fill_viridis(discrete = TRUE,
+                     "") +
+  guides(fill=guide_legend(nrow = 2, byrow = TRUE)) +
+  scale_x_continuous(breaks = plot_x_axis_breaks,
+                     labels = plot_x_axis_breaks / 1000,
+                     expand = c(0, 0)) +
+  coord_cartesian(xlim = plot_x_axis_limits) +
+  scale_y_continuous(name = "Number of\ngrinding stones") +
+  theme_bw(base_size) +
+  # Put upper-right corner of legend box in upper-right corner of graph
+  theme(legend.justification = c(1, 1),
+        legend.position = c(0.99, 0.99),
+        legend.text = element_text(size = 8),
+        legend.title = element_blank(),
+        legend.key.size = unit(2, "mm"),
+        axis.text.x=element_blank(),
+        plot.margin=unit(c(0,1,-0.5,1), "cm"),
+        aspect.ratio = 3/4,
+        axis.ticks = element_blank(),
+        axis.title.x = element_blank())
+
+d18O_plot <-
+  ggplot() +
+  geom_line(data = lisiecki2005,   # add d18O line
+            aes(Time,
+                d18O)) +
+  annotate("rect",
+           xmin = mis_last_90ka$LR04_Age_ka_end,
+           xmax = mis_last_90ka$LR04_Age_ka_start,
+           ymin = -Inf,
+           ymax = Inf,
+           alpha = .2,
+           fill = rep(c("grey70", "white"),
+                      nrow(mis_last_90ka)/2)) +
+  annotate("text",
+           label = glue("MIS {mis_last_90ka$label_MIS}"),
+           x =     mis_last_90ka$LR04_Age_ka_mid,
+           y = rep(4, nrow(mis_last_90ka)),
+           size = 3) +
+  scale_x_continuous(breaks = plot_x_axis_breaks / 1000,
+                     labels = plot_x_axis_breaks / 1000,
+                     name = "",
+                     expand = c(0, 0)) +
+  coord_cartesian(xlim = plot_x_axis_limits / 1000) +
+  scale_y_reverse(name = bquote(Benthic~delta^18*O)) +
+  theme_bw(base_size) +
+  theme(axis.text.x = element_blank(),
+        plot.margin = unit(c(0,1,-0.5,1), "cm"),
+        aspect.ratio = 1/4,
+        axis.ticks = element_blank())
+
+sea_level_plot <-
+  ggplot() +
+  geom_line(data = spratt2016,
+            aes(age_calkaBP,
+                SeaLev_shortPC1)) +
+  annotate("rect",
+           xmin = mis_last_90ka$LR04_Age_ka_end,
+           xmax = mis_last_90ka$LR04_Age_ka_start,
+           ymin = -Inf,
+           ymax = Inf,
+           alpha = .2,
+           fill = rep(c("grey70", "white"),
+                      nrow(mis_last_90ka)/2)) +
+  scale_x_continuous(breaks = plot_x_axis_breaks / 1000,
+                     labels = plot_x_axis_breaks / 1000,
+                     name = "Thousands of years before the present",
+                     expand = c(0, 0)) +
+  coord_cartesian(xlim = plot_x_axis_limits / 1000) +
+  scale_y_continuous(name =  "Sea Level, meters\nabove present day") +
+  theme_bw(base_size) +
+  theme(plot.margin = unit(c(0,1,0,1), "cm"),
+        aspect.ratio = 1/4)
+
+
+# library(gridExtra)
+#
+# # ok, but not quite aligned properly
+# grid.arrange(gs_plot,
+#              d18O_plot,
+#              sea_level_plot,
+#              ncol = 1)
+
+# This is how we can line them up individually
+## convert plots to gtable objects
+library(gtable)
+library(grid) # low-level grid functions are required
+# function to make the panel plot
+draw_panel_plot <- function(){
+g1 <- ggplotGrob(gs_plot)
+g2 <- ggplotGrob(d18O_plot)
+g3 <- ggplotGrob(sea_level_plot)
+g <- rbind(g1, g2, g3, size="first") # stack the two plots
+g$widths <- unit.pmax(g1$widths, g2$widths, g3$widths) # use the largest widths
+grid.newpage()
+grid.draw(g)
+}
+
+# draw it:
+draw_panel_plot()
+
+# save it:
+pnas_col_width <- 87 # mm
+png("C:/Users/bmarwick/Desktop/fig2.png",
+    width = pnas_col_width * 1.5,
+    height = pnas_col_width * 1.5 * 1.7,
+    units = "mm", res = 300)
+draw_panel_plot()
+dev.off()
+
+
+
+# -------------------------------------------------------------------------
+
 # overall, how many GS in each phase?
 
 cleaned_rotated_points_in_main_excavation_area_GS <-
@@ -587,5 +792,13 @@ stone_artefacts_only %>%
   arrange(year)
 
 
+## Phases for 2015 plotted GS that you didn't analyse, GS 51-87
+
+# ebbes_artefacts_with_phases %>%
+#   filter(Artefact.no. %in% drop_gs0) %>%
+#   write_csv("GS_51_onwards.csv")
 
 
+# R68 is in E1/18 but I've got phase 1! Should be phase 6-7
+gs_phases %>%
+  filter(grepl("R68", Artefact.no.))
