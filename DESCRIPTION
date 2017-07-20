@@ -28,7 +28,8 @@ Imports:
   gridExtra,
   readr,
   readxl,
-  rioja
+  rioja,
+  tidyverse
 Encoding: UTF-8
 LazyData: true
 RoxygenNote: 6.0.1
