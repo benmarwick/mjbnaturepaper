@@ -1899,7 +1899,7 @@ get_osl_ages <-  function(cleaned_rotated_points_in_main_excavation_area){
   # what about XY for the NE?
   # get it from the QGIS project in
   # E:\My Documents\My UW\Research\1206 M2 excavation\Section photos
-  osl_ne <- read.csv("data/ages/NE_section_from_QGIS_points.csv")
+  osl_ne <- read.csv("data/ages/NE_section_from_QGIS_points.csv", encoding = "UTF-8")
   osl_ne$NE_OSL_num <- paste0("NE", osl_ne$NE_OSL_num, "$") # exclude NE1C
   names(osl_ne) <-  c("Xnew_flipped", "Elevation", "id", "Sample")
 
