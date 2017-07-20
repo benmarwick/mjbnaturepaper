@@ -1,4 +1,4 @@
-Lab ID,Sample ID,source,pretreat,Mean ?13C (‰),1? ?13C (‰),Mean 14C Age (BP),1? 14C Age (BP),1? range lower Calibrated Age (cal BP)(a),1? range upper Calibrated Age (cal BP)(a),2? range lower Calibrated Age (cal BP)(a),2s upper Calibrated Age (cal BP)(a),Median,Depth mbs
+Lab ID,Sample ID,source,pretreat,Mean 13C,1s 13C,Mean 14C Age (BP),1s 14C Age (BP),1s range lower Calibrated Age (cal BP)(a),1s range upper Calibrated Age (cal BP)(a),2s range lower Calibrated Age (cal BP)(a),2s upper Calibrated Age (cal BP)(a),Median,Depth mbs
 OZQ460,C14X14-E4/6A,Radiocarbon Results for AINSE Grant 15/001 - Feb 2016,,-25.8,0.1,330,20,440,315,465,305,385,0.199732
 OZQ463,C14X196-C2/37A,Radiocarbon Results for AINSE Grant 15/001 - Feb 2016,,-25.4,0.1,24520,100,29520,29280,29660,28600,29390,1.896983
 OZQ464,C14X2-C3/4,Radiocarbon Results for AINSE Grant 15/001 - Feb 2016,,-25.1,0.1,145,20,275,10,285,5,150,0.137827
