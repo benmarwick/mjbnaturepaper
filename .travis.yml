@@ -13,7 +13,7 @@ repos:
   MRAN: "https://mran.microsoft.com/snapshot/2017-07-20"
 
 script:
-  - sudo apt install libgsl-dev # for MBESS
+  - apt-get install libgsl0-dev # for MBESS
   - Rscript -e "devtools::install()"
   - Rscript -e "rmarkdown::render('analysis/supplementary_information.Rmd')"
 
