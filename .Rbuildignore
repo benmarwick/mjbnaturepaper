@@ -2,3 +2,6 @@
 ^\.Rproj\.user$
 ^packrat/
 ^\.Rprofile$
+^\.travis\.yml$
+^README\.Rmd$
+^README-.*\.png$

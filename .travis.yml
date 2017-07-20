@@ -1,0 +1,16 @@
+# R for travis: see documentation at https://docs.travis-ci.com/user/languages/r
+
+language: R
+
+sudo: false
+
+cache:
+  packages: true
+
+repos:
+  MRAN: "https://mran.microsoft.com/snapshot/2017-07-20"
+
+script:
+  - Rscript -e "rmarkdown::render('analysis/supplementary_information.Rmd')"
+
+warnings_are_errors: false
