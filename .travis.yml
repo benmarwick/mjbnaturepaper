@@ -13,7 +13,7 @@ repos:
   MRAN: "https://mran.microsoft.com/snapshot/2017-07-20"
 
 script:
-  - Rscript -e "devtools::build()"
+  - Rscript -e "devtools::install()"
   - Rscript -e "rmarkdown::render('analysis/supplementary_information.Rmd')"
 
 warnings_are_errors: false
