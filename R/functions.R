@@ -1807,7 +1807,7 @@ get_osl_ages <-  function(cleaned_rotated_points_in_main_excavation_area){
 
   osl_column_depths <- osl_column %>%
     separate(Depth, c("upper_depth", "lower_depth"), sep = "-") %>%
-    dplyr::mutate_at(matches("depth"), as.numeric)
+    dplyr::mutate_at(vars(matches("depth")), as.numeric)
 
   # get total station point for MM1 of 2012
   mm1_2012 <- ts_data_both_years_PFs %>% filter(grepl("MM1", Description), year == "2012")
@@ -1955,7 +1955,7 @@ get_c14_ages <- function(cleaned_rotated_points_in_main_excavation_area){
   ts_data_both_years_PFs <-  cleaned_rotated_points_in_main_excavation_area
   # depths of all the C14 dates that ZJ has (from her 14C results_Malakunanja II_2014 and 2016 results for Zen.xlsx)
 
-  all_the_c14_dates <- read.csv("data/ages/14C results_Malakunanja II_2014 and 2016 results for Zen.csv")
+  all_the_c14_dates <- read.csv("data/ages/14C results_Malakunanja II_2014 and 2016 results for Zen.csv", encoding = "UTF-8")
 
   # edit depth of E3_5A_SF20, whic ZJ noticed is probably too deep, replace with mean spit depth
   # extract end levels and depth

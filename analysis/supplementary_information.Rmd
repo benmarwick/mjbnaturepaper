@@ -10,7 +10,8 @@ output: bookdown::html_document2
 knitr::opts_chunk$set(echo = FALSE,
                       warning = FALSE,
                       message = FALSE,
-                      quiet = TRUE)
+                      quiet = TRUE,
+                      progress=FALSE)
 # Submission preparation guidelines:
 # http://www.nature.com/nature/authors/gta/
 # Nature’s standard figure sizes are 89 mm (single column) and 183 mm (double column) and the full depth of the page is 247 mm.
