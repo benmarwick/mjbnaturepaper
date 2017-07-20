@@ -7,6 +7,8 @@ sudo: false
 cache:
   packages: true
 
+bioc_packages: IRanges
+
 repos:
   MRAN: "https://mran.microsoft.com/snapshot/2017-07-20"
 
