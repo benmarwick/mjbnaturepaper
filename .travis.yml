@@ -11,8 +11,14 @@ bioc_packages: IRanges
 
 repos:
   MRAN: "https://mran.microsoft.com/snapshot/2017-07-20"
+  
+addons:
+  apt:
+    packages:
+      - libgsl0-dev  # for MBESS
 
 script:
+  - Rscript -e "devtools::install()"
   - Rscript -e "rmarkdown::render('analysis/supplementary_information.Rmd')"
 
 warnings_are_errors: false
