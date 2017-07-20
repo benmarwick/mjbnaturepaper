@@ -13,6 +13,7 @@ repos:
   MRAN: "https://mran.microsoft.com/snapshot/2017-07-20"
 
 script:
+  - Rscript -e "install.packages("MBESS")  # because travis says no
   - Rscript -e "devtools::install()"
   - Rscript -e "rmarkdown::render('analysis/supplementary_information.Rmd')"
 
