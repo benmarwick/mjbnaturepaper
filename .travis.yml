@@ -12,7 +12,10 @@ bioc_packages: IRanges
 repos:
   MRAN: "https://mran.microsoft.com/snapshot/2017-07-20"
   
-install: libgsl0-dev  # for MBESS
+addons:
+  apt:
+    packages:
+      - libgsl0-dev  # for MBESS
 
 script:
   - Rscript -e "devtools::install()"
