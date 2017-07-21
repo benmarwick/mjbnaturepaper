@@ -20,4 +20,4 @@ RUN . /etc/environment \
   && R -e "options(repos='https://mran.microsoft.com/snapshot/2017-07-20'); devtools::install('/mjbnaturepaper', dep=TRUE)" \
 
  # render the manuscript into a docx
-  && R -e "rmarkdown::render('/mjbnaturepaper/analysis/supplementary_information.Rmd)"
+  && R -e "rmarkdown::render('/mjbnaturepaper/analysis/supplementary_information.Rmd')"
