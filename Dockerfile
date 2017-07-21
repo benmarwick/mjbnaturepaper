@@ -12,6 +12,10 @@ RUN . /etc/environment \
   && apt-get update \
   && apt-get install libgsl0-dev  -y \
   
+  # install bioconductor pkg
+  && R -e 'source("https://bioconductor.org/biocLite.R")' \
+  && R -e 'biocLite("IRanges")'
+  
   # build this compendium package, get deps from MRAN
   # set date here manually
   && R -e "options(repos='https://mran.microsoft.com/snapshot/2017-07-20'); devtools::install('/mjbnaturepaper', dep=TRUE)" \
