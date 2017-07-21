@@ -9,6 +9,7 @@ COPY . /mjbnaturepaper
 RUN . /etc/environment \
   
   # install linux dependency 
+  && apt-get update \
   && apt-get install libgsl0-dev  -y \
   
   # build this compendium package, get deps from MRAN
