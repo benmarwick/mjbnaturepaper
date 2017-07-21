@@ -1801,7 +1801,7 @@ get_osl_ages <-  function(cleaned_rotated_points_in_main_excavation_area){
 
   # what are the spits associated with the 2012 OSL column on the SW section?
   # depths measured from surface, sampling started at bottom on MM1
-  osl_column <-  read.csv("data/ages/MKII_2012_OSL_column_SW_section.csv")
+  osl_column <-  read.csv("data/ages/MKII_2012_OSL_column_SW_section.csv" , fileEncoding="latin1")
 
   # seperate out upper and lower depths per sample
 
@@ -1955,7 +1955,7 @@ get_c14_ages <- function(cleaned_rotated_points_in_main_excavation_area){
   ts_data_both_years_PFs <-  cleaned_rotated_points_in_main_excavation_area
   # depths of all the C14 dates that ZJ has (from her 14C results_Malakunanja II_2014 and 2016 results for Zen.xlsx)
 
-  all_the_c14_dates <- read.csv("data/ages/14C results_Malakunanja II_2014 and 2016 results for Zen.csv", encoding = "UTF-8")
+  all_the_c14_dates <- read.csv("data/ages/14C results_Malakunanja II_2014 and 2016 results for Zen.csv", encoding = "UTF-8", , fileEncoding="latin1")
 
   # edit depth of E3_5A_SF20, whic ZJ noticed is probably too deep, replace with mean spit depth
   # extract end levels and depth
