@@ -671,13 +671,13 @@ plot_stone_artefacts <- function(stone_artefacts_only){
 refits <- function(stone_artefacts_only){
 
   # read in data
-  refit_data <- read.csv("data/refit_data/Table_6_McNeil_Jessica_41449086_BA(Hons)_finalthesis.csv", stringsAsFactors = FALSE, header = TRUE)
+  refit_data <- read.csv("data/refit_data/Table_6_McNeil_Jessica_41449086_BA(Hons)_finalthesis.csv", stringsAsFactors = FALSE, header = TRUE, fileEncoding="latin1")
   refit_data <- refit_data[-1,]
 
   # update artefact ID after CC's check
   refit_data[refit_data$artefact2 == " X210 B6-60 ", 5] <- "X210 B6-32"
 
-  appendix_data <- read.csv("data/refit_data/Appendix McNeil_Jessica_41449086_BA(Hons)_finalthesis.csv", stringsAsFactors = FALSE)
+  appendix_data <- read.csv("data/refit_data/Appendix McNeil_Jessica_41449086_BA(Hons)_finalthesis.csv", stringsAsFactors = FALSE, fileEncoding="latin1")
 
   # get coords of refits with L numbers
 
@@ -1055,7 +1055,7 @@ prepare_geoarchaeology_data <- function(cleaned_rotated_points_in_main_excavatio
 
   options(warn=-1)
   # mag sus from KL
-  mag_sus_B2 <- read.csv("data/geoarchaeology_data/MJB_Lowe2016.csv", stringsAsFactors = FALSE)
+  mag_sus_B2 <- read.csv("data/geoarchaeology_data/MJB_Lowe2016.csv", stringsAsFactors = FALSE, fileEncoding="latin1")
   mag_sus_B2 <- mag_sus_B2[c(2:54), ]
   mag_sus_B2$Depth.Below.Surface..m <- as.numeric(mag_sus_B2$X)
   # remove the C3 stuff
@@ -1132,7 +1132,7 @@ prepare_geoarchaeology_data <- function(cleaned_rotated_points_in_main_excavatio
 
   # This is from code I wrote for LRH
 
-  MJB_SW_S_section_particle_size <- read.csv("data/geoarchaeology_data/MJB_SW_S_section_particle_size.txt", header = FALSE, stringsAsFactors = FALSE)
+  MJB_SW_S_section_particle_size <- read.csv("data/geoarchaeology_data/MJB_SW_S_section_particle_size.txt", header = FALSE, stringsAsFactors = FALSE, fileEncoding="latin1")
 
 
   # delete first row and first 23 columns to get only sample

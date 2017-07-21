@@ -153,7 +153,7 @@ depth age and age of each artefact band, as well as first occupation
 
 ```{r}
 c14_ages <- get_c14_ages(cleaned_rotated_points_in_main_excavation_area)
-osl_ages <- get_osl_ages(cleaned_rotated_points_in_main_excavation_area)
+Bosl_ages <- get_osl_ages(cleaned_rotated_points_in_main_excavation_area)
 
 plot_ages_and_artefacts(osl_ages, c14_ages, stone_artefacts_only)
 ```
