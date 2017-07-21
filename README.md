@@ -3,7 +3,7 @@
 mjbnaturepaper
 ==============
 
-[![Travis-CI Build Status](https://travis-ci.org/benmarwick/mjbnaturepaper.svg?branch=master)](https://travis-ci.org/benmarwick/mjbnaturepaper)
+[![Travis-CI Build Status](https://travis-ci.org/benmarwick/mjbnaturepaper.svg?branch=master)](https://travis-ci.org/benmarwick/mjbnaturepaper) [![Circle CI](https://circleci.com/gh/benmarwick/mjbnaturepaper?style=shield&circle-token=:circle-token)](https://circleci.com/gh/benmarwick/mjbnaturepaper)
 
 The goal of mjbnaturepaper is to ...
 
