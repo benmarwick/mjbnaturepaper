@@ -2079,15 +2079,16 @@ get_c14_ages <- function(cleaned_rotated_points_in_main_excavation_area){
   # don't care if no age
   all_the_c14_dates <-
     all_the_c14_dates %>%
-    filter(!is.na(Median))
+    filter(!is.na(Median)) %>%
+    filter(!is.na(X1s.14C.Age..BP.))
 
   surf <- 100.693213   # NE_SEC_TAPE_1
   all_the_c14_dates$depth_below_surface <- all_the_c14_dates$Elevation - surf
 
   # because I'm not sure how the calibrations are done, I'll do it again myself
   # compute 95 credible interval cf. https://github.com/andrewcparnell/Bchron/issues/1
-  c14_ages <- as.numeric(as.character(all_the_c14_dates$Mean.14C.Age..BP. ))
-  c14_errors <- as.numeric(as.character(all_the_c14_dates$X1..14C.Age..BP.))
+  c14_ages <-   as.numeric(as.character(all_the_c14_dates$Mean.14C.Age..BP. ))
+  c14_errors <- as.numeric(as.character(all_the_c14_dates$X1s.14C.Age..BP.))
 
 
   ages_cal <- Bchron::BchronCalibrate(ages=c14_ages,
