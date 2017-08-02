@@ -607,6 +607,9 @@ library(glue)
 # subset the MIS data for the last 80 ka years
 mis_last_90ka <- LR04_MISboundaries[LR04_MISboundaries$LR04_Age_ka_start <= 90, ]
 
+aspect_ratio_gs <- 3/4 # 3/4 is best
+aspect_ratio <- 1/6    # 1/4 looks best
+
 gs_plot <-
 ggplot() +
   annotate("rect",
@@ -644,7 +647,7 @@ ggplot() +
         legend.key.size = unit(2, "mm"),
         axis.text.x=element_blank(),
         plot.margin=unit(c(0,1,-0.5,1), "cm"),
-        aspect.ratio = 3/4,
+        aspect.ratio = aspect_ratio_gs,
         axis.ticks = element_blank(),
         axis.title.x = element_blank())
 
@@ -671,11 +674,12 @@ d18O_plot <-
                      name = "",
                      expand = c(0, 0)) +
   coord_cartesian(xlim = plot_x_axis_limits / 1000) +
-  scale_y_reverse(name = bquote(Benthic~delta^18*O)) +
+  scale_y_reverse(name = bquote(Benthic~delta^18*O),
+                  position = "right") + # put y-axis at right to avoid label crowding
   theme_bw(base_size) +
   theme(axis.text.x = element_blank(),
         plot.margin = unit(c(0,1,-0.5,1), "cm"),
-        aspect.ratio = 1/4,
+        aspect.ratio = aspect_ratio,
         axis.ticks = element_blank())
 
 sea_level_plot <-
@@ -699,7 +703,7 @@ sea_level_plot <-
   scale_y_continuous(name =  "Sea Level, meters\nabove present day") +
   theme_bw(base_size) +
   theme(plot.margin = unit(c(0,1,0,1), "cm"),
-        aspect.ratio = 1/4)
+        aspect.ratio = aspect_ratio)
 
 
 # library(gridExtra)
