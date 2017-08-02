@@ -12,9 +12,12 @@ RUN . /etc/environment \
   && apt-get update \
   && apt-get install libgsl0-dev  -y \
   
+  # install bioconductor pkg
+  && R -e 'source("https://bioconductor.org/biocLite.R"); biocLite("IRanges")' \
+  
   # build this compendium package, get deps from MRAN
   # set date here manually
   && R -e "options(repos='https://mran.microsoft.com/snapshot/2017-07-20'); devtools::install('/mjbnaturepaper', dep=TRUE)" \
 
  # render the manuscript into a docx
-  && R -e "rmarkdown::render('/mjbnaturepaper/analysis/supplementary_information.Rmd)"
+  && R -e "rmarkdown::render('/mjbnaturepaper/analysis/supplementary_information.Rmd')"
