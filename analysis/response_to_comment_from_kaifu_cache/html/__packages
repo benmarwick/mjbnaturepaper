@@ -1,0 +1,11 @@
+base
+knitr
+mjbnaturepaper
+tidyverse
+ggplot2
+tibble
+tidyr
+readr
+purrr
+dplyr
+bindrcpp

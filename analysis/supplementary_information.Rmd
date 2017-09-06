@@ -62,7 +62,7 @@ The artefacts occur in three dense bands. Detailed piece plotting revealed three
 
 Each band corresponds to a change in raw material use and stone working technology. 
 
-```{r}
+```{r rawmaterial}
 # section scatter plot, artefacts in all squares
 plot_stone_artefacts(stone_artefacts_only)
 
@@ -94,7 +94,7 @@ chisq.test(chi_sq_raw_material_by_phase_tbl)
 Associations were found between 19 artefacts (lower = 14, middle = 3) indicating refits and conjoins within the lower two dense artefact layers but not between them. Although artefacts increase in mass slightly with depth overall, change in depth explains only 0.20% of changes in artefact mass. If we look into the upper and lower bands of artefacts separately, we see that ...  
 
 
-```{r}
+```{r refits}
 # Refits -------------------------------------
 
 # plot refit plan and section views, and rose plot of dip
@@ -122,14 +122,11 @@ size_sorting_plot(spit_depths_B6_output)
 
 ```
 
-
-
-
 ## Extended Data Figure 9
 
 Each pulse in artifact discard corresponds to a peak in mass-normalized magnetic susceptibility, increasing in magnitude towards the surface, and a peak in the quantity of burnt chert in the lower two bands (chert is absent in the upper band), indicating artifact pulses are probably associated with phases of intense anthropogenic burning in the shelter 
 
-```{r}
+```{r geoarchaeology}
 prepared_geoarchaeology_data <-  
   prepare_geoarchaeology_data(cleaned_rotated_points_in_main_excavation_area)
 
@@ -151,22 +148,18 @@ Micromorphology of the excavated deposits shows aeolian and alluvial origins of 
 
 depth age and age of each artefact band, as well as first occupation
 
-```{r}
+```{r getages}
 c14_ages <- get_c14_ages(cleaned_rotated_points_in_main_excavation_area)
 osl_ages <- get_osl_ages(cleaned_rotated_points_in_main_excavation_area)
 
 plot_ages_and_artefacts(osl_ages, c14_ages, stone_artefacts_only)
 ```
 
-
- 
 ## Extended Data Table 1
 
 Raw materials are predominantly quartzite, silcrete, exotic fine-grained quartzite, mudstone and dolerite (Extended Data Table 1)
 
 # Supplementary Information figures and tables:
-
-Here's the code to reproduce the figures in the Supplementary Information:
 
 This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
 

@@ -157,6 +157,9 @@ last_bit_of_desc <- sapply(stone_artefacts_only_no_find$code, function(i) i[leng
 stone_artefacts_only[is.na(stone_artefacts_only$find),]$find <-
   gsub("[0-9]", "", last_bit_of_desc)
 
+
+#  ------------------------------------------------------------------------
+
 # where are the squares?
 EL <- cleaned_rotated_points_in_main_excavation_area[grepl("EL", cleaned_rotated_points_in_main_excavation_area$Description), ]
 # only B
@@ -217,7 +220,8 @@ p <- ggplot(stone_artefacts_only,
            depth_below_ground_surface,
            colour = find)) +
   geom_point(size = 0.5) +
-  scale_y_reverse(limits = c(3,0)) +
+  scale_y_reverse(limits = c(3,0),
+                  breaks = seq(0, 3, 0.1)) +
   theme_minimal() +
   scale_x_continuous(breaks = row_c,
                      labels = NULL) +
@@ -263,6 +267,11 @@ nullh <- sapply(g$heights, attr, "unit")
 if(any(nullw == "null"))
   ar <- unlist(g$widths[nullw == "null"]) / unlist(g$heights[nullh == "null"])
 
+
+
+#  ------------------------------------------------------------------------
+
+
 stone_artefacts_only_B_C <- stone_artefacts_only[grep("B|C", stone_artefacts_only$square), ]
 
 # put age and error in separate cols
@@ -277,7 +286,7 @@ bacon_df <- data.frame(labID = c(as.character(c14_ages$Description),
                                as.character(osl_ages$Description)),
                        age = c(c14_ages$Mean.14C.Age..BP.,
                                 osl_ages$osl_age * 1000),
-                       error = c(c14_ages$X1..14C.Age..BP.,
+                       error = c(c14_ages$X1s.14C.Age..BP.,
                                  osl_ages$osl_error * 1000),
                        depth = c(c14_ages$depth_below_ground_surface * 100,
                                  -osl_ages$total_station_depth_below_surf * 100),
@@ -325,6 +334,8 @@ par(mfrow = c(2, 1))
 hist(predictAges[,1], main = "Bchron age at 210 cm")
 hist(predictAges[,2], main = "Bchron age at 270 cm")
 
+
+#  ------------------------------------------------------------------------
 
 # reproduce ZJ's plot of tweaking OSL dates
 library(ggplot2)
@@ -510,7 +521,7 @@ gs_hulls_labels <-
             Elevation = mean(Elevation))
 
 
-
+library(ggrepel)
 ggplot() +
   geom_point(data = c14_ages,
              aes(Xnew_flipped,
