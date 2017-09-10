@@ -421,6 +421,30 @@ ggplot() +
 ```
 
 
+Let's check for differences between the two age-depth models. As a general approach to detecting a significant difference between age-depth models, we first make linear models of the age-depth relationship for sub-sets of the samples (i.e. one model for all OSL samples, and one model for all C14 samples). We found that a quadratic model (i.e. second-order polynomial) is a simple model that fits all the subsets of our data very well. Then we compute a model that combines the data from two sub-sets, and adds a third variable, the grouping variable, that identifies the two models. We then compute an ANOVA to investigate the effect of the grouping variable on the fit of the models. If the ANOVA returns a significant difference, we conclude that the grouping variable has a significant effect, and thus the two sub-sets of the our data have significantly different age-depth models. 
+
+As we can see, the two models are not significantly different, so the effect of the grouping variable is not significant.  Since the grouping variable introduced when combining th C14 and OSL ages into a single data set represents the respective datasets, the polynomial fits to the two datasets can be considered not significantly different.
+
+```{r}
+# combine data with grouping variable
+ages_with_groups <- data.frame(ages = c(c14_ages_excludes$Bchron_Median/1000, 
+                                        osl_ages$osl_age),
+                               depths = c(c14_ages_excludes$depth_below_surface,
+                                          osl_ages$total_station_depth_below_surf),
+                               group = c(rep("c14", nrow(c14_ages_excludes)),
+                                         rep("osl", nrow(osl_ages))))
+
+#model without grouping variable
+fit0 <- lm(ages ~ poly(depths, 2), data = ages_with_groups)
+
+#model with grouping variable
+fit1 <- lm(ages ~ poly(depths, 2) * group, data = ages_with_groups)
+
+#compare models 
+anova(fit0, fit1)
+```
+
+
 ```{r}
 library(ggrepel)
 formula <- y ~ poly(x, 2)
@@ -464,6 +488,28 @@ ggplot() +
   ggtitle("All OSL with C14 ages only from squares D and E")
 ```
 
+Unlike the above models, these two age-depth models of all OSL ages and C14 ages only from squares D and E are significantly different. A significant interaction is reported by the ANOVA comparing the null model with the model that includes the grouping variable (i.e. the dating method). This indicates that the dating method has a significant effect on the age-depth relationship in this case. The radiocarbon ages are signficantly younger than the OSL ages.
+
+```{r}
+# combine data with grouping variable
+ages_with_groups <- data.frame(ages = c(c14_ages[grepl("D|E", c14_ages$square_spit), ]$Bchron_Median/1000, 
+                                        osl_ages$osl_age),
+                               depths = c(c14_ages[grepl("D|E", c14_ages$square_spit), ]$depth_below_surface,
+                                          osl_ages$total_station_depth_below_surf),
+                               group = c(rep("c14", nrow(c14_ages[grepl("D|E", c14_ages$square_spit), ])),
+                                         rep("osl", nrow(osl_ages))))
+
+#model without grouping variable
+fit0 <- lm(ages ~ poly(depths, 2), data = ages_with_groups)
+
+#model with grouping variable
+fit1 <- lm(ages ~ poly(depths, 2) * group, data = ages_with_groups)
+
+#compare models 
+anova(fit0, fit1)
+```
+
+
 ```{r}
 ggplot() +
   geom_point(data = c14_ages[grepl("B|C", c14_ages$square_spit), ],
@@ -504,6 +550,29 @@ ggplot() +
   ggtitle("C14 ages from squares D & E vs B & C")
 ```
 
+In comparing C14 ages from the two sides of the excavation, we see no significant difference in the age-depth models for samples taken from squares D & E compared to squares B & C: 
+
+```{r}
+# combine data with grouping variable
+ages_with_groups <- data.frame(ages = c(c14_ages[grepl("B|C", c14_ages$square_spit), ]$Bchron_Median/1000, 
+                                        c14_ages[grepl("D|E", c14_ages$square_spit), ]$Bchron_Median/1000),
+                               depths = c(c14_ages[grepl("B|C", c14_ages$square_spit), ]$depth_below_surface,
+                                          c14_ages[grepl("D|E", c14_ages$square_spit), ]$depth_below_surface),
+                               group = c(rep("c14 BC", nrow(c14_ages[grepl("B|C", c14_ages$square_spit), ])),
+                                         rep("osl DE", nrow(c14_ages[grepl("D|E", c14_ages$square_spit), ]))))
+
+#model without grouping variable
+fit0 <- lm(ages ~ poly(depths, 2), data = ages_with_groups)
+
+#model with grouping variable
+fit1 <- lm(ages ~ poly(depths, 2) * group, data = ages_with_groups)
+
+#compare models 
+anova(fit0, fit1)
+```
+
+
+
 ```{r}
 ggplot() +
       geom_point(data = osl_ages[grepl("NE", osl_ages$Sample), ],
@@ -542,6 +611,27 @@ ggplot() +
   ylab("age ka") +
   xlab("Depth below surface (m)") +
   ggtitle("OSL ages from NE column & C14 ages from squares D & E")
+```
+
+OSL ages from the NE column present a significantly different age-depth curve to the C14 ages from squares D and E. They do seem to have a point about the difficulty of correlating ages from the two different methods across the site. 
+
+```{r}
+# combine data with grouping variable
+ages_with_groups <- data.frame(ages = c(c14_ages[grepl("D|E", c14_ages$square_spit), ]$Bchron_Median/1000, 
+                                        osl_ages[grepl("NE", osl_ages$Sample), ]$osl_age),
+                               depths = c(c14_ages[grepl("D|E", c14_ages$square_spit), ]$depth_below_surface,
+                                          osl_ages[grepl("NE", osl_ages$Sample), ]$total_station_depth_below_surf),
+                               group = c(rep("c14", nrow(c14_ages[grepl("D|E", c14_ages$square_spit), ])),
+                                         rep("osl", nrow(osl_ages[grepl("NE", osl_ages$Sample), ]))))
+
+#model without grouping variable
+fit0 <- lm(ages ~ poly(depths, 2), data = ages_with_groups)
+
+#model with grouping variable
+fit1 <- lm(ages ~ poly(depths, 2) * group, data = ages_with_groups)
+
+#compare models 
+anova(fit0, fit1)
 ```
 
 
@@ -591,21 +681,44 @@ ggplot() +
 
 ```
 
+No significant different in age-depth curves of C14 ages from the front of the site compared to C14 ages from the back of the site. 
+
 ```{r}
+# combine data with grouping variable
+ages_with_groups <- data.frame(ages = c(c14_ages[grepl(front, c14_ages$square), ]$Bchron_Median/1000, 
+                                        c14_ages[grepl(back, c14_ages$square), ]$Bchron_Median/1000),
+                               depths = c(c14_ages[grepl(front, c14_ages$square), ]$depth_below_surface,
+                                          c14_ages[grepl(back, c14_ages$square), ]$depth_below_surface),
+                               group = c(rep("c14 front", nrow(c14_ages[grepl(front, c14_ages$square), ])),
+                                         rep("c14 back", nrow(c14_ages[grepl(back, c14_ages$square), ]))))
+
+#model without grouping variable
+fit0 <- lm(ages ~ poly(depths, 2), data = ages_with_groups)
+
+#model with grouping variable
+fit1 <- lm(ages ~ poly(depths, 2) * group, data = ages_with_groups)
+
+#compare models 
+anova(fit0, fit1)
+```
+
+
+```{r}
+nudge <- 0
 ggplot() +
       geom_point(data = osl_ages[grepl("NE", osl_ages$Sample), ],
-             aes(-total_station_depth_below_surf, 
+             aes(-total_station_depth_below_surf + nudge, 
                  osl_age),
              colour = viridis(3)[1]) +
     geom_smooth(data = osl_ages[grepl("NE", osl_ages$Sample), ],
-             aes(-total_station_depth_below_surf, 
+             aes(-total_station_depth_below_surf + nudge, 
                  osl_age),
               colour = viridis(3)[1],
               method = "lm", 
               formula = formula, 
               fullrange = TRUE) +
     geom_text_repel(data = osl_ages[grepl("NE", osl_ages$Sample), ],
-             aes(-total_station_depth_below_surf, 
+             aes(-total_station_depth_below_surf + nudge, 
                  osl_age,
                  label = Sample),
              size = 2) +
@@ -631,3 +744,85 @@ ggplot() +
   ggtitle("OSL ages from NE column & OSL ages from SW columns")
 ```
 
+There is a very significant difference in the age-depth curves of the NE OSL ages compared to the SW OSL ages. We do not seem to have a good understanding of how the NE side of the deposit relates to the SW side.
+
+```{r}
+# combine data with grouping variable
+ages_with_groups <- data.frame(ages = c(osl_ages[grepl("NE", osl_ages$Sample), ]$osl_age, 
+                                         osl_ages[grepl("SW", osl_ages$Sample), ]$osl_age),
+                               depths = c(osl_ages[grepl("NE", osl_ages$Sample), ]$total_station_depth_below_surf + nudge,
+                                           osl_ages[grepl("SW", osl_ages$Sample), ]$total_station_depth_below_surf),
+                               group = c(rep("osl NE", nrow(osl_ages[grepl("NE", osl_ages$Sample), ])),
+                                         rep("osl SW", nrow( osl_ages[grepl("SW", osl_ages$Sample), ]))))
+
+#model without grouping variable
+fit0 <- lm(ages ~ poly(depths, 2), data = ages_with_groups)
+
+#model with grouping variable
+fit1 <- lm(ages ~ poly(depths, 2) * group, data = ages_with_groups)
+
+#compare models 
+anova(fit0, fit1)
+```
+
+If we nudge the depths of the samples from the NE side up about 0.45 m, then they line up very well. However the age-depth models are still not equivalent, according to the ANOVA. 
+
+```{r}
+nudge <- 0.45
+ggplot() +
+      geom_point(data = osl_ages[grepl("NE", osl_ages$Sample), ],
+             aes(-total_station_depth_below_surf + nudge, 
+                 osl_age),
+             colour = viridis(3)[1]) +
+    geom_smooth(data = osl_ages[grepl("NE", osl_ages$Sample), ],
+             aes(-total_station_depth_below_surf + nudge, 
+                 osl_age),
+              colour = viridis(3)[1],
+              method = "lm", 
+              formula = formula, 
+              fullrange = TRUE) +
+    geom_text_repel(data = osl_ages[grepl("NE", osl_ages$Sample), ],
+             aes(-total_station_depth_below_surf + nudge, 
+                 osl_age,
+                 label = Sample),
+             size = 2) +
+  geom_point(data = osl_ages[grepl("SW", osl_ages$Sample), ],
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+             colour = viridis(3)[3]) +
+    geom_smooth(data = osl_ages[grepl("SW", osl_ages$Sample), ],
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+              colour = viridis(3)[3],
+              method = "lm", 
+              formula = formula, 
+              fullrange = TRUE) +
+    geom_text_repel(data = osl_ages[grepl("SW", osl_ages$Sample), ],
+             aes(-total_station_depth_below_surf, 
+                 osl_age,
+                 label = Sample),
+             size = 2) +
+  theme_minimal() +
+  ylab("age ka") +
+  xlab("Depth below surface (m)") +
+  ggtitle(paste0("OSL ages from NE column (nudged up ", nudge, "m \nfor demonstration purposes) & OSL ages from SW columns"))
+```
+
+```{r}
+# combine data with grouping variable
+ages_with_groups <- data.frame(ages = c(osl_ages[grepl("NE", osl_ages$Sample), ]$osl_age, 
+                                         osl_ages[grepl("SW", osl_ages$Sample), ]$osl_age),
+                               depths = c(osl_ages[grepl("NE", osl_ages$Sample), ]$total_station_depth_below_surf + nudge,
+                                           osl_ages[grepl("SW", osl_ages$Sample), ]$total_station_depth_below_surf),
+                               group = c(rep("osl NE", nrow(osl_ages[grepl("NE", osl_ages$Sample), ])),
+                                         rep("osl SW", nrow( osl_ages[grepl("SW", osl_ages$Sample), ]))))
+
+#model without grouping variable
+fit0 <- lm(ages ~ poly(depths, 2), data = ages_with_groups)
+
+#model with grouping variable
+fit1 <- lm(ages ~ poly(depths, 2) * group, data = ages_with_groups)
+
+#compare models 
+anova(fit0, fit1)
+```
