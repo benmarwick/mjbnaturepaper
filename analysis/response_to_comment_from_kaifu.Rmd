@@ -23,7 +23,7 @@ library(ggrepel)
 
 ```{r echo=FALSE}
 library(knitr)
-invisible(purl("supplementary_information.Rmd", output="temp", quiet=TRUE))
+invisible(purl("supplementary_information.Rmd", output = "temp", quiet=TRUE))
 read_chunk("temp")
 ```
 
@@ -41,11 +41,7 @@ unlink("temp")
 
 Kaifu and Shitaoka write:
 
-"First, the OSL ages for the lowest dense artifact band (called as the ‘zone of initial
-human occupation’) are different as much as 10,000 years between the two main
-sections. The ages were ~53,000–55,000 years ago at square B4 (SW–A series), whereas
-~57,000–65,000 years ago at a location one meter apart from there (SW–B/C series at
-square B5). The lower limit of this artifact band at square B4 has been lowered in Extended Data Figure 8c (the lower stippled line), but this must be an error because such a lower limit cannot be supported from the artifact distribution and the lithic artifact refitting analysis illustrated in Extended Data Figures 1, 2 and 6. The observed internal inconsistency indicates that either or both of the OSL ages have considerable errors."
+"First, the OSL ages for the lowest dense artifact band (called as the ‘zone of initial human occupation’) are different as much as 10,000 years between the two main sections. The ages were ~53,000–55,000 years ago at square B4 (SW–A series), whereas ~57,000–65,000 years ago at a location one meter apart from there (SW–B/C series at square B5). The lower limit of this artifact band at square B4 has been lowered in Extended Data Figure 8c (the lower stippled line), but this must be an error because such a lower limit cannot be supported from the artifact distribution and the lithic artifact refitting analysis illustrated in Extended Data Figures 1, 2 and 6. The observed internal inconsistency indicates that either or both of the OSL ages have considerable errors."
 
 So let's see what is the age of phase 2 in square B4 compared to B5.
 
@@ -296,12 +292,12 @@ artefacts_per_litre_long$depth <-
                                         Depth, depth))
 
 vlines <- data.frame(id = rep(names(the_list), 2), 
-                     xintercept =c(rep(c(2.1, 
-                                        2.2,
-                                        2.25), 2),
-                                  rep(c(2.5,
-                                        2.65, 
-                                        2.7), 2)))
+                     xintercept =c(rep(c(2.15, 
+                                        2.15,
+                                        2.15), 2),
+                                  rep(c(2.6,
+                                        2.6, 
+                                        2.6), 2)))
                      
                                     
                                   
@@ -315,13 +311,15 @@ ggplot(artefacts_per_litre_long,
              aes(xintercept = xintercept),
              colour = "red") +
   geom_text(data = vlines, 
-           aes(
-           x = xintercept,
-           y = -0.5,
-           label = xintercept),
-           size = 3) +
+           aes(x = xintercept,
+               y = -0.5,
+               label = xintercept),
+           size = 2) +
   theme_minimal() +
-  xlab("Depth below surface (m)")
+  xlab("Depth below surface (m)") +
+  ggtitle("MJB artefact density by depth in squares B-C 4-5-6")
+
+ggsave("figures/Artefact density by depth in squares B-C 4-5-6.png")
 ```
 
 
@@ -330,102 +328,36 @@ ggplot(artefacts_per_litre_long,
 
 Kaifu and Shitaoka write:
 
-"Second, contrary to the authors’ statement, the reported radiocarbon and OSL
-chronologies are not in agreement with each other. Among the seven radiocarbon ages
-measured below the –110 cm level (> 20,000 years ago in the OSL time scale), six of
-them collectively shows its own time trajectory which is younger than the OSL time
-scale in Extended Data Figure 8g. Clarkson and colleagues suggested ~30–50 cm
-downward relocation for the two dated charcoals either by artificial or natural processes
-(Supplementary Information, p.18 in ref. 1). Even if we accept this possibility, the
-claimed consistency is unsound in the lower stratigraphic section because it is
-supported by single isolated charcoal (OZT592). Such a piece could be intruded from
-nearby older deposit in a sandy area like Madjedbebe."
+"Second, contrary to the authors’ statement, the reported radiocarbon and OSL chronologies are not in agreement with each other. Among the seven radiocarbon ages measured below the –110 cm level (> 20,000 years ago in the OSL time scale), six of them collectively shows its own time trajectory which is younger than the OSL time scale in Extended Data Figure 8g. Clarkson and colleagues suggested ~30–50 cm downward relocation for the two dated charcoals either by artificial or natural processes (Supplementary Information, p.18 in ref. 1). Even if we accept this possibility, the claimed consistency is unsound in the lower stratigraphic section because it is supported by single isolated charcoal (OZT592). Such a piece could be intruded from nearby older deposit in a sandy area like Madjedbebe."
 
-"The data from the squares E and D series show more obvious inconsistency between the
-two dating methods, although this point was not mentioned by Clarkson and colleagues.
-Stratigraphic correlations could not be established between the opposite ends of the
-excavated grids, that is, between the area around square B4 and the area around
-square E2 (ref. 1). Because of this, the OSL ages plotted in Extended Data Figure 8g
-were restricted to the former (square B4, B5, and C4), although this chart includes
-radiocarbon ages from both areas (C3, C4, C5, E3, and E4) except for the data from
-square D2 (Wk43606). In order to look at tendency in each area, in Table 1, we compiled
-two regional data sets from Supplementary Tables 2, 5, and 6 (ref. 1), focusing on
-chronologies between the –90 and –200 cm levels from where the radiocarbon data are
-available. In the area around E2, two radiocarbon ages from the hearths at about –100
-cm level (Wk43610 and Wk43606) are younger than the OSL age 10 cm above (NE3) by
-~3,000–7,000 years. Overall, the radiocarbon data suggests a younger chronology than
-the OSL results, or more appropriately, the number of reported radiocarbon ages is too
-small to settle this question."
+"The data from the squares E and D series show more obvious inconsistency between the two dating methods, although this point was not mentioned by Clarkson and colleagues. Stratigraphic correlations could not be established between the opposite ends of the excavated grids, that is, between the area around square B4 and the area around square E2 (ref. 1). Because of this, the OSL ages plotted in Extended Data Figure 8g were restricted to the former (square B4, B5, and C4), although this chart includes radiocarbon ages from both areas (C3, C4, C5, E3, and E4) except for the data from square D2 (Wk43606). In order to look at tendency in each area, in Table 1, we compiled two regional data sets from Supplementary Tables 2, 5, and 6 (ref. 1), focusing on chronologies between the –90 and –200 cm levels from where the radiocarbon data are available. In the area around E2, two radiocarbon ages from the hearths at about –100 cm level (Wk43610 and Wk43606) are younger than the OSL age 10 cm above (NE3) by ~3,000–7,000 years. Overall, the radiocarbon data suggests a younger chronology than the OSL results, or more appropriately, the number of reported radiocarbon ages is too small to settle this question."
 
 
 So, let's have a look at the correlation between the C14 and OSL ages at the site.
 
 ```{r}
-library(ggrepel)
-formula <- y ~ poly(x, 2)
-
-excluding <- c("Wk43605", # pit feature
+# prepare data
+excluding <- c("Wk43605" , # pit feature
                #"Wk43606", 
                #"Wk43607", 
                #"Wk43610", 
                #"Wk43604",
                #"Wk43611",
                #"OZT591",
-               "OZT593")
+               "OZT593"
+  )
+
+# excluding <- NA
 
 squares <- "B3|B4|B5|C3|C4|C5|D3|D4|D5|E3|E4|E5"
 
 c14_ages_excludes <-  c14_ages[!grepl(paste0(excluding, collapse = "|"), c14_ages$Lab.ID), ]
 c14_ages_excludes <- c14_ages_excludes[grepl(paste0(squares, collapse = "|"), c14_ages_excludes$square), ]
-
-ggplot() +
-    geom_point(data = osl_ages,
-             aes(-total_station_depth_below_surf, 
-                 osl_age),
-             colour = viridis(3)[1]) +
-    geom_smooth(data = osl_ages,
-             aes(-total_station_depth_below_surf, 
-                 osl_age),
-              colour = viridis(3)[1],
-              method = "lm", 
-              formula = formula, 
-              fullrange = TRUE) +
-    geom_text_repel(data = osl_ages,
-             aes(-total_station_depth_below_surf, 
-                 osl_age,
-                 label = Sample),
-             size = 2) +
-    geom_point(data =c14_ages_excludes,
-             aes(-depth_below_surface, 
-                 Bchron_Median/1000),
-             colour = viridis(3)[3]) +
-    geom_smooth(data = c14_ages_excludes,
-              aes(-depth_below_surface, 
-                 Bchron_Median/1000),
-              method = "lm", 
-              formula = formula, 
-              fullrange = TRUE,
-              colour = viridis(3)[3]) +
-      geom_text_repel(data = c14_ages_excludes,
-             aes(-depth_below_surface, 
-                 Bchron_Median/1000,
-                 label = Lab.ID),
-             size = 2) +
-   annotate("text", x = 2.7, y = 10, 
-            label = paste0("Excluding:\n", paste0(excluding, collapse = "\n")), 
-            size = 2)  +
-  theme_minimal() +
-  ylab("age ka") +
-  xlab("Depth below surface (m)") +
-  ggtitle("All OSL ages with all C14 ages from rows 3-5")
 ```
 
-
-Let's check for differences between the two age-depth models. As a general approach to detecting a significant difference between age-depth models, we first make linear models of the age-depth relationship for sub-sets of the samples (i.e. one model for all OSL samples, and one model for all C14 samples). We found that a quadratic model (i.e. second-order polynomial) is a simple model that fits all the subsets of our data very well. Then we compute a model that combines the data from two sub-sets, and adds a third variable, the grouping variable, that identifies the two models. We then compute an ANOVA to investigate the effect of the grouping variable on the fit of the models. If the ANOVA returns a significant difference, we conclude that the grouping variable has a significant effect, and thus the two sub-sets of the our data have significantly different age-depth models. 
-
-As we can see, the two models are not significantly different, so the effect of the grouping variable is not significant.  Since the grouping variable introduced when combining th C14 and OSL ages into a single data set represents the respective datasets, the polynomial fits to the two datasets can be considered not significantly different.
-
 ```{r}
+# test for difference in age-depth models
+
 # combine data with grouping variable
 ages_with_groups <- data.frame(ages = c(c14_ages_excludes$Bchron_Median/1000, 
                                         osl_ages$osl_age),
@@ -441,8 +373,701 @@ fit0 <- lm(ages ~ poly(depths, 2), data = ages_with_groups)
 fit1 <- lm(ages ~ poly(depths, 2) * group, data = ages_with_groups)
 
 #compare models 
-anova(fit0, fit1)
+all_osl_c14_BCDE_3_5 <- anova(fit0, fit1)
+pval <- round(all_osl_c14_BCDE_3_5$`Pr(>F)`[2], 4)
+fval <- round(all_osl_c14_BCDE_3_5$F[2], 3)
+df <- all_osl_c14_BCDE_3_5$Df[2]
 ```
+
+```{r}
+library(ggrepel)
+
+formula <- y ~ poly(x, 2)
+
+ggplot() +
+    geom_point(data = osl_ages,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+             colour = viridis(3)[1]) +
+    geom_smooth(data = osl_ages,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+              method = "lm", 
+              formula = formula, 
+              #fullrange = TRUE,
+             colour = viridis(3)[1]) +
+    geom_text_repel(data = osl_ages,
+             aes(-total_station_depth_below_surf, 
+                 osl_age,
+                 label = Sample),
+             size = 1.5) +
+    geom_point(data =c14_ages_excludes,
+             aes(-depth_below_surface, 
+                 Bchron_Median/1000),
+             colour = viridis(3)[3]) +
+    geom_smooth(data = c14_ages_excludes,
+              aes(-depth_below_surface, 
+                 Bchron_Median/1000),
+              method = "lm", 
+              formula = formula, 
+             # fullrange = TRUE,
+              colour = viridis(3)[3]) +
+      geom_text_repel(data = c14_ages_excludes,
+             aes(-depth_below_surface, 
+                 Bchron_Median/1000,
+                 label = Lab.ID),
+             size = 1.5) +
+   annotate("text", x = 2.7, y = 10, 
+            label = paste0("Excluding:\n", paste0(excluding, collapse = "\n")), 
+            size = 2)  +
+   annotate("text",  x = 0.7, y = 75, 
+            label = paste0("Age-depth model comparison ANOVA:\n", 
+                           "F = ", fval, ", df = ", df, ", p = ", pval, " (quadratic fits)",
+                           "\nModels are ", ifelse(pval <= 0.05, "", "not"), " significantly different" ), 
+            size = 2) +
+  theme_minimal() +
+  ylab("age ka") +
+  xlab("Depth below surface (m)") +
+  ggtitle("All OSL ages with all C14 ages from B-C-D-E 3-5")
+
+ggsave("figures/All OSL ages with all C14 ages from B-C-D-E 3-5.png")
+```
+
+
+Let's check for differences between the two age-depth models. As a general approach to detecting a significant difference between age-depth models, we first make linear models of the age-depth relationship for sub-sets of the samples (i.e. one model for all OSL samples, and one model for all C14 samples). We found that a quadratic model (i.e. second-order polynomial) is a simple model that fits all the subsets of our data very well. Then we compute a model that combines the data from two sub-sets, and adds a third variable, the grouping variable, that identifies the two models. We then compute an ANOVA to investigate the effect of the grouping variable on the fit of the models. If the ANOVA returns a significant difference, we conclude that the grouping variable has a significant effect, and thus the two sub-sets of the our data have significantly different age-depth models. 
+
+As we can see, the two models are not significantly different, so the effect of the grouping variable is not significant.  Since the grouping variable introduced when combining th C14 and OSL ages into a single data set represents the respective datasets, the polynomial fits to the two datasets can be considered not significantly different. We only need to exclude one anomously deep C14 sample to find a non-significant difference between the age-depth curves of these two sets.
+
+```{r}
+all_osl_c14_BCDE_3_5
+```
+
+OSL SWABC and all  C14:
+
+
+```{r}
+# prepare data
+excluding <- c("Wk43605" , # pit feature
+               #"Wk43606", 
+               #"Wk43607", 
+               #"Wk43610", 
+               #"Wk43604",
+               #"Wk43611",
+               #"OZT591",
+               "OZT593"
+  )
+
+# excluding <- NA
+
+squares <- "B3|B4|B5|C3|C4|C5|D3|D4|D5|E3|E4|E5"
+
+c14_ages_excludes <-  c14_ages[!grepl(paste0(excluding, collapse = "|"), c14_ages$Lab.ID), ]
+c14_ages_excludes <- c14_ages_excludes[grepl(paste0(squares, collapse = "|"), c14_ages_excludes$square), ]
+
+osl_ages_SWABC <-  osl_ages[grepl("SW.*A|SW.*B|SW.*C", osl_ages$Sample), ]
+```
+
+```{r}
+# test for difference in age-depth models
+
+# combine data with grouping variable
+ages_with_groups <- data.frame(ages = c(c14_ages_excludes$Bchron_Median/1000, 
+                                        osl_ages_SWABC$osl_age),
+                               depths = c(c14_ages_excludes$depth_below_surface,
+                                          osl_ages_SWABC$total_station_depth_below_surf),
+                               group = c(rep("c14", nrow(c14_ages_excludes)),
+                                         rep("osl SWABC", nrow(osl_ages_SWABC))))
+
+#model without grouping variable
+fit0 <- lm(ages ~ poly(depths, 2), data = ages_with_groups)
+
+#model with grouping variable
+fit1 <- lm(ages ~ poly(depths, 2) * group, data = ages_with_groups)
+
+#compare models 
+all_osl_SWABC_c14_BCDE_3_5 <- anova(fit0, fit1)
+pval <- round(all_osl_SWABC_c14_BCDE_3_5$`Pr(>F)`[2], 4)
+fval <- round(all_osl_SWABC_c14_BCDE_3_5$F[2], 3)
+df <- all_osl_SWABC_c14_BCDE_3_5$Df[2]
+```
+
+```{r}
+library(ggrepel)
+
+formula <- y ~ poly(x, 2)
+
+ggplot() +
+    geom_point(data = osl_ages_SWABC,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+             colour = viridis(3)[1]) +
+    geom_smooth(data = osl_ages_SWABC,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+              method = "lm", 
+              formula = formula, 
+              #fullrange = TRUE,
+             colour = viridis(3)[1]) +
+    geom_text_repel(data = osl_ages_SWABC,
+             aes(-total_station_depth_below_surf, 
+                 osl_age,
+                 label = Sample),
+             size = 1.5) +
+    geom_point(data =c14_ages_excludes,
+             aes(-depth_below_surface, 
+                 Bchron_Median/1000),
+             colour = viridis(3)[3]) +
+    geom_smooth(data = c14_ages_excludes,
+              aes(-depth_below_surface, 
+                 Bchron_Median/1000),
+              method = "lm", 
+              formula = formula, 
+             # fullrange = TRUE,
+              colour = viridis(3)[3]) +
+      geom_text_repel(data = c14_ages_excludes,
+             aes(-depth_below_surface, 
+                 Bchron_Median/1000,
+                 label = Lab.ID),
+             size = 1.5) +
+   annotate("text", x = 2.7, y = 10, 
+            label = paste0("Excluding:\n", paste0(excluding, collapse = "\n")), 
+            size = 2)  +
+   annotate("text",  x = 0.7, y = 75, 
+            label = paste0("Age-depth model comparison ANOVA:\n", 
+                            "F = ", fval, ", df = ", df, ", p = ", pval, " (quadratic fits)",
+                           "\nModels are ", ifelse(pval <= 0.05, "", "not "), "significantly different" ), 
+            size = 2) +
+  theme_minimal() +
+  ylab("age ka") +
+  xlab("Depth below surface (m)") +
+  ggtitle("OSL ages from SW A-B-C and C14 ages from B-C-D-E 3-5")
+
+ggsave("figures/OSL ages from SW A-B-C and C14 ages from B-C-D-E 3-5.png")
+```
+
+
+OSL NWSWABC and all  C14:
+
+
+```{r}
+# prepare data
+excluding <- c("Wk43605" , # pit feature
+               #"Wk43606", 
+               #"Wk43607", 
+               #"Wk43610", 
+               #"Wk43604",
+               #"Wk43611",
+               #"OZT591",
+               "OZT593"
+  )
+
+# excluding <- NA
+
+squares <- "B3|B4|B5|C3|C4|C5|D3|D4|D5|E3|E4|E5"
+
+c14_ages_excludes <-  c14_ages[!grepl(paste0(excluding, collapse = "|"), c14_ages$Lab.ID), ]
+c14_ages_excludes <- c14_ages_excludes[grepl(paste0(squares, collapse = "|"), c14_ages_excludes$square), ]
+
+osl_ages_NWSWABC <-  osl_ages[grepl("NW.|SW.*A|SW.*B|SW.*C", osl_ages$Sample), ]
+osl_ages_NE <- osl_ages[grepl("NE.", osl_ages$Sample), ]
+```
+
+```{r}
+# test for difference in age-depth models
+
+# combine data with grouping variable
+ages_with_groups <- data.frame(ages = c(c14_ages_excludes$Bchron_Median/1000, 
+                                        osl_ages_NWSWABC$osl_age),
+                               depths = c(c14_ages_excludes$depth_below_surface,
+                                          osl_ages_NWSWABC$total_station_depth_below_surf),
+                               group = c(rep("c14", nrow(c14_ages_excludes)),
+                                         rep("osl NWSWABC", nrow(osl_ages_NWSWABC))))
+
+#model without grouping variable
+fit0 <- lm(ages ~ poly(depths, 2), data = ages_with_groups)
+
+#model with grouping variable
+fit1 <- lm(ages ~ poly(depths, 2) * group, data = ages_with_groups)
+
+#compare models 
+all_osl_NWSWABC_c14_BCDE_3_5 <- anova(fit0, fit1)
+pval <- round(all_osl_NWSWABC_c14_BCDE_3_5$`Pr(>F)`[2], 4)
+fval <- round(all_osl_NWSWABC_c14_BCDE_3_5$F[2], 3)
+df <- all_osl_NWSWABC_c14_BCDE_3_5$Df[2]
+```
+
+```{r}
+library(ggrepel)
+
+formula <- y ~ poly(x, 2)
+
+ggplot() +
+        geom_point(data = osl_ages_NE,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+             colour = viridis(3)[2]) +
+      geom_text_repel(data = osl_ages_NE,
+             aes(-total_station_depth_below_surf, 
+                 osl_age,
+                 label = Sample),
+             size = 1.5) +
+    geom_point(data = osl_ages_NWSWABC,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+             colour = viridis(3)[1]) +
+    geom_smooth(data = osl_ages_NWSWABC,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+              method = "lm", 
+              formula = formula, 
+              #fullrange = TRUE,
+             colour = viridis(3)[1]) +
+    geom_text_repel(data = osl_ages_NWSWABC,
+             aes(-total_station_depth_below_surf, 
+                 osl_age,
+                 label = Sample),
+             size = 1.5) +
+    geom_point(data =c14_ages_excludes,
+             aes(-depth_below_surface, 
+                 Bchron_Median/1000),
+             colour = viridis(3)[3]) +
+    geom_smooth(data = c14_ages_excludes,
+              aes(-depth_below_surface, 
+                 Bchron_Median/1000),
+              method = "lm", 
+              formula = formula, 
+             # fullrange = TRUE,
+              colour = viridis(3)[3]) +
+      geom_text_repel(data = c14_ages_excludes,
+             aes(-depth_below_surface, 
+                 Bchron_Median/1000,
+                 label = Lab.ID),
+             size = 1.5) +
+   annotate("text", x = 2.7, y = 10, 
+            label = paste0("Excluding:\n", paste0(excluding, collapse = "\n")), 
+            size = 2)  +
+   annotate("text",  x = 0.5, y = 75, hjust = 0,
+            label = paste0("Age-depth model comparison ANOVA\n",
+                           "Comparing OSL ages from NW & SW A-B-C to\n",
+                            "C14 ages from B-C-D-E 3-5:\n",
+                            "F = ", fval, ", df = ", df, ", p = ", pval, " (quadratic fits)",
+                           "\nModels are ", ifelse(pval <= 0.05, "", "not "), "significantly different" ), 
+            size = 2) +
+  theme_minimal() +
+  ylab("Age ka") +
+  xlab("Depth below surface (m)") +
+  ggtitle("OSL ages and\nC14 ages from B-C-D-E 3-5")
+
+ggsave("figures/OSL ages from NW, SW A-B-C and C14 ages from B-C-D-E 3-5.png")
+```
+
+Comparing OSL for B4 (SW A) and B5 (SW B & C):
+
+```{r}
+# prepare data
+osl_ages_SWA <-  osl_ages[grepl("SW.*A", osl_ages$Sample), ]
+osl_ages_SWBC <-  osl_ages[grepl("SW.*B|SW.*C", osl_ages$Sample), ]
+```
+
+```{r}
+# test for difference in age-depth models
+
+# combine data with grouping variable
+ages_with_groups <- data.frame(ages = c(osl_ages_SWA$osl_age,
+                                        osl_ages_SWBC$osl_age),
+                               depths = c(osl_ages_SWA$total_station_depth_below_surf,
+                                          osl_ages_SWB$total_station_depth_below_surf),
+                               group = c(rep("B4 (SW A)", nrow(osl_ages_SWA)),
+                                         rep("B5 (SW B & C)", nrow(osl_ages_SWBC))))
+
+#model without grouping variable
+fit0 <- lm(ages ~ poly(depths, 2), data = ages_with_groups)
+
+#model with grouping variable
+fit1 <- lm(ages ~ poly(depths, 2) * group, data = ages_with_groups)
+
+#compare models 
+all_osl_B4_B5 <- anova(fit0, fit1)
+pval <- round(all_osl_B4_B5$`Pr(>F)`[2], 3)
+fval <- round(all_osl_B4_B5$F[2], 3)
+df <- all_osl_B4_B5$Df[2]
+```
+
+```{r}
+library(ggrepel)
+formula <- y ~ poly(x, 2)
+
+ggplot() +
+    geom_point(data = osl_ages_SWA,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+             colour = viridis(3)[1]) +
+    geom_smooth(data = osl_ages_SWA,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+              colour = viridis(3)[1],
+              method = "lm", 
+              formula = formula, 
+              fullrange = TRUE) +
+    geom_text_repel(data = osl_ages_SWA,
+             aes(-total_station_depth_below_surf, 
+                 osl_age,
+                 label = Sample),
+             size = 2) +
+    geom_point(data = osl_ages_SWBC,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+             colour = viridis(3)[3]) +
+    geom_smooth(data = osl_ages_SWBC,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+              colour = viridis(3)[3],
+              method = "lm", 
+              formula = formula, 
+              fullrange = TRUE) +
+    geom_text_repel(data = osl_ages_SWBC,
+             aes(-total_station_depth_below_surf, 
+                 osl_age,
+                 label = Sample),
+             size = 2) +
+   annotate("text",  x = 0.5, y = 75, hjust = 0,
+            label = paste0("Age-depth model comparison ANOVA\n",
+                           "Comparing OSL ages from B4 (SW A) and B5 (SW B & C)\n",
+                            "F = ", fval, ", df = ", df, ", p = ", pval, " (quadratic fits)",
+                           "\nModels are ", ifelse(pval <= 0.05, "", "not "), "significantly different" ), 
+            size = 2) +
+  theme_minimal() +
+  ylab("Age ka") +
+  xlab("Depth below surface (m)") +
+  ggtitle("OSL ages from B4 (SW A) and B5 (SW B & C)")
+
+ggsave("figures/OSL ages from B4 (SW A) and B5 (SW B & C).png")
+```
+
+
+
+Comparing OSL SWA B-C and NW:
+
+```{r}
+# prepare data
+osl_ages_SWBC <-  osl_ages[grepl("SW.*B|SW.*C", osl_ages$Sample), ]
+osl_ages_NW <-  osl_ages[grepl("NW", osl_ages$Sample), ]
+```
+
+```{r}
+# test for difference in age-depth models
+
+# combine data with grouping variable
+ages_with_groups <- data.frame(ages = c(osl_ages_SWBC$osl_age,
+                                        osl_ages_NW$osl_age),
+                               depths = c(osl_ages_SWBC$total_station_depth_below_surf,
+                                          osl_ages_NW$total_station_depth_below_surf),
+                               group = c(rep("SW B & C", nrow(osl_ages_SWBC)),
+                                         rep("NW", nrow(osl_ages_NW))))
+
+#model without grouping variable
+fit0 <- lm(ages ~ poly(depths, 2), data = ages_with_groups)
+
+#model with grouping variable
+fit1 <- lm(ages ~ poly(depths, 2) * group, data = ages_with_groups)
+
+#compare models 
+all_osl_SWBC_NW <- anova(fit0, fit1)
+pval <- round(all_osl_SWBC_NW$`Pr(>F)`[2], 3)
+```
+
+```{r}
+library(ggrepel)
+formula <- y ~ poly(x, 2)
+
+ggplot() +
+    geom_point(data = osl_ages_NW,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+             colour = viridis(3)[1]) +
+    geom_smooth(data = osl_ages_NW,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+              colour = viridis(3)[1],
+              method = "lm", 
+              formula = formula, 
+              fullrange = TRUE) +
+    geom_text_repel(data = osl_ages_NW,
+             aes(-total_station_depth_below_surf, 
+                 osl_age,
+                 label = Sample),
+             size = 2) +
+    geom_point(data = osl_ages_SWBC,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+             colour = viridis(3)[3]) +
+    geom_smooth(data = osl_ages_SWBC,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+              colour = viridis(3)[3],
+              method = "lm", 
+              formula = formula, 
+              fullrange = TRUE) +
+    geom_text_repel(data = osl_ages_SWBC,
+             aes(-total_station_depth_below_surf, 
+                 osl_age,
+                 label = Sample),
+             size = 2) +
+     annotate("text",  x = 0.7, y = 75, 
+            label = paste0("Age-depth model comparison ANOVA:\n", 
+                           "p = ", pval, " (quadratic fits)",
+                           "\nModels are ", ifelse(pval <= 0.05, "", "not"), " significantly different" ), 
+            size = 2) +
+  theme_minimal() +
+  ylab("age ka") +
+  xlab("Depth below surface (m)") +
+  ggtitle("OSL ages from C4 (NW) and B5 (SW B & C)")
+
+ggsave("figures/OSL ages from C4 (NW) and B5 (SW B & C).png")
+```
+
+OSL front and back, NE and SWBC:
+
+```{r}
+# prepare data
+osl_ages_SWBC <-  osl_ages[grepl("SW.*B|SW.*C", osl_ages$Sample), ]
+osl_ages_NE <-  osl_ages[grepl("NE.", osl_ages$Sample), ]
+```
+
+```{r}
+# test for difference in age-depth models
+
+# combine data with grouping variable
+ages_with_groups <- data.frame(ages = c(osl_ages_SWBC$osl_age,
+                                        osl_ages_NE$osl_age),
+                               depths = c(osl_ages_SWBC$total_station_depth_below_surf,
+                                          osl_ages_NE$total_station_depth_below_surf),
+                               group = c(rep("SW B & C", nrow(osl_ages_SWBC)),
+                                         rep("NE", nrow(osl_ages_NE))))
+
+#model without grouping variable
+fit0 <- lm(ages ~ poly(depths, 2), data = ages_with_groups)
+
+#model with grouping variable
+fit1 <- lm(ages ~ poly(depths, 2) * group, data = ages_with_groups)
+
+#compare models 
+all_osl_SWBC_NE <- anova(fit0, fit1)
+pval <- round(all_osl_SWBC_NE$`Pr(>F)`[2], 3)
+```
+
+```{r}
+library(ggrepel)
+formula <- y ~ poly(x, 2)
+
+ggplot() +
+    geom_point(data = osl_ages_NE,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+             colour = viridis(3)[1]) +
+    geom_smooth(data = osl_ages_NE,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+              colour = viridis(3)[1],
+              method = "lm", 
+              formula = formula, 
+              fullrange = TRUE) +
+    geom_text_repel(data = osl_ages_NE,
+             aes(-total_station_depth_below_surf, 
+                 osl_age,
+                 label = Sample),
+             size = 2) +
+    geom_point(data = osl_ages_SWBC,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+             colour = viridis(3)[3]) +
+    geom_smooth(data = osl_ages_SWBC,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+              colour = viridis(3)[3],
+              method = "lm", 
+              formula = formula, 
+              fullrange = TRUE) +
+    geom_text_repel(data = osl_ages_SWBC,
+             aes(-total_station_depth_below_surf, 
+                 osl_age,
+                 label = Sample),
+             size = 2) +
+     annotate("text",  x = 0.7, y = 75, 
+            label = paste0("Age-depth model comparison ANOVA:\n", 
+                           "p = ", pval, " (quadratic fits)",
+                           "\nModels are ", ifelse(pval <= 0.05, "", "not"), " significantly different" ), 
+            size = 2) +
+  theme_minimal() +
+  ylab("age ka") +
+  xlab("Depth below surface (m)") +
+  ggtitle("OSL ages from front (NE) and back (SW B & C)")
+
+ggsave("figures/OSL ages from front (NE) and back (SW B & C).png")
+```
+
+
+OSL SWABC and NW:
+
+
+```{r}
+# prepare data
+osl_ages_SWABC <-  osl_ages[grepl("SW.*A|SW.*B|SW.*C", osl_ages$Sample), ]
+osl_ages_NW <-  osl_ages[grepl("NW.", osl_ages$Sample), ]
+```
+
+```{r}
+# test for difference in age-depth models
+
+# combine data with grouping variable
+ages_with_groups <- data.frame(ages = c(osl_ages_SWABC$osl_age,
+                                        osl_ages_NW$osl_age),
+                               depths = c(osl_ages_SWABC$total_station_depth_below_surf,
+                                          osl_ages_NW$total_station_depth_below_surf),
+                               group = c(rep("SW A, B & C", nrow(osl_ages_SWABC)),
+                                         rep("NW", nrow(osl_ages_NW))))
+
+#model without grouping variable
+fit0 <- lm(ages ~ poly(depths, 2), data = ages_with_groups)
+
+#model with grouping variable
+fit1 <- lm(ages ~ poly(depths, 2) * group, data = ages_with_groups)
+
+#compare models 
+all_osl_SWABC_NW <- anova(fit0, fit1)
+pval <- round(all_osl_SWABC_NW$`Pr(>F)`[2], 3)
+```
+
+```{r}
+library(ggrepel)
+formula <- y ~ poly(x, 2)
+
+ggplot() +
+    geom_point(data = osl_ages_SWABC,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+             colour = viridis(3)[1]) +
+    geom_smooth(data = osl_ages_SWABC,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+              colour = viridis(3)[1],
+              method = "lm", 
+              formula = formula, 
+              fullrange = TRUE) +
+    geom_text_repel(data = osl_ages_SWABC,
+             aes(-total_station_depth_below_surf, 
+                 osl_age,
+                 label = Sample),
+             size = 2) +
+    geom_point(data = osl_ages_NW,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+             colour = viridis(3)[3]) +
+    geom_smooth(data = osl_ages_NW,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+              colour = viridis(3)[3],
+              method = "lm", 
+              formula = formula, 
+              fullrange = TRUE) +
+    geom_text_repel(data = osl_ages_NW,
+             aes(-total_station_depth_below_surf, 
+                 osl_age,
+                 label = Sample),
+             size = 2) +
+     annotate("text",  x = 0.7, y = 75, 
+            label = paste0("Age-depth model comparison ANOVA:\n", 
+                           "p = ", pval, " (quadratic fits)",
+                           "\nModels are ", ifelse(pval <= 0.05, "", "not"), " significantly different" ), 
+            size = 2) +
+  theme_minimal() +
+  ylab("age ka") +
+  xlab("Depth below surface (m)") +
+  ggtitle("OSL ages from NW and SW A, B & C")
+
+ggsave("figures/OSL ages from NW and SW A, B & C.png")
+```
+
+OSL NE and NW:
+
+```{r}
+# prepare data
+osl_ages_NE <-  osl_ages[grepl("NE.", osl_ages$Sample), ]
+osl_ages_NW <-  osl_ages[grepl("NW.", osl_ages$Sample), ]
+```
+
+```{r}
+# test for difference in age-depth models
+
+# combine data with grouping variable
+ages_with_groups <- data.frame(ages = c(osl_ages_NE$osl_age,
+                                        osl_ages_NW$osl_age),
+                               depths = c(osl_ages_NE$total_station_depth_below_surf,
+                                          osl_ages_NW$total_station_depth_below_surf),
+                               group = c(rep("NE", nrow(osl_ages_NE)),
+                                         rep("NW", nrow(osl_ages_NW))))
+
+#model without grouping variable
+fit0 <- lm(ages ~ poly(depths, 2), data = ages_with_groups)
+
+#model with grouping variable
+fit1 <- lm(ages ~ poly(depths, 2) * group, data = ages_with_groups)
+
+#compare models 
+all_osl_NE_NW <- anova(fit0, fit1)
+pval <- round(all_osl_NE_NW$`Pr(>F)`[2], 3)
+```
+
+```{r}
+library(ggrepel)
+formula <- y ~ poly(x, 2)
+
+ggplot() +
+    geom_point(data = osl_ages_NE,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+             colour = viridis(3)[1]) +
+    geom_smooth(data = osl_ages_NE,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+              colour = viridis(3)[1],
+              method = "lm", 
+              formula = formula, 
+              fullrange = TRUE) +
+    geom_text_repel(data = osl_ages_NE,
+             aes(-total_station_depth_below_surf, 
+                 osl_age,
+                 label = Sample),
+             size = 2) +
+    geom_point(data = osl_ages_NW,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+             colour = viridis(3)[3]) +
+    geom_smooth(data = osl_ages_NW,
+             aes(-total_station_depth_below_surf, 
+                 osl_age),
+              colour = viridis(3)[3],
+              method = "lm", 
+              formula = formula, 
+              fullrange = TRUE) +
+    geom_text_repel(data = osl_ages_NW,
+             aes(-total_station_depth_below_surf, 
+                 osl_age,
+                 label = Sample),
+             size = 2) +
+     annotate("text",  x = 0.7, y = 75, 
+            label = paste0("Age-depth model comparison ANOVA:\n", 
+                           "p = ", pval, " (quadratic fits)",
+                           "\nModels are ", ifelse(pval <= 0.05, "", "not "), "significantly different" ), 
+            size = 2) +
+  theme_minimal() +
+  ylab("age ka") +
+  xlab("Depth below surface (m)") +
+  ggtitle("OSL ages from NW and NE")
+
+ggsave("figures/OSL ages from NW and NE.png")
+```
+
 
 
 ```{r}
