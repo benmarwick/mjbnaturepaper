@@ -778,7 +778,7 @@ cleaned_rotated_points_in_main_excavation_area_GS_phases %>%
   mutate(gs_per_1000_years = n / (start_up - end_lo) * 1000)
 
 
-
+#------------------------------------------------------------------------------
 ## can you give me a summarised list all the final artefact counts comprising both the 2012 and 2015 assemblages? I want to know the % of grinding stones compared with other lithic tools (I think it is around 4%)?
 
 library(dplyr)
@@ -806,3 +806,75 @@ stone_artefacts_only %>%
 # R68 is in E1/18 but I've got phase 1! Should be phase 6-7
 gs_phases %>%
   filter(grepl("R68", Artefact.no.))
+
+#------------------------------------------------------------------------------
+# I know that the grinding stones account for about 2% of the total stone
+# artefact count over the entire assemblage, but can you provide me a break
+# down of this % per phase? I think perhaps the % of grinding stones gets
+# higher in Phase 4 coinciding with the LGM? Can you confirm this?
+
+# get phases for every artefact
+stone_artefacts_only_phases <-
+  stone_artefacts_only %>%
+  filter(find != "LINE") %>%
+  fuzzy_left_join(phases,
+                  by = c("depth_below_ground_surface" = "upper",
+                         "depth_below_ground_surface" = "lower"),
+                  match_fun = list(`>=`, `<=`)) %>%
+  distinct(.keep_all = TRUE)
+
+# how many artefacts?
+# nrow(stone_artefacts_only_phases)
+
+# how many have a phase number?
+# sum(stone_artefacts_only_phases$phase != "", na.rm = TRUE)
+# we're missing a few, never mind...
+
+# deal with the phase 6-7 dating
+stone_artefacts_only_phases$phase  <-
+  with(stone_artefacts_only_phases,
+       ifelse(phase == 6 | phase == 7,
+              "6-7", phase))
+
+# a break down of GS % per phase
+stone_artefacts_only_phases_tally <-
+stone_artefacts_only_phases %>%
+  group_by(phase, find) %>%
+  tally() %>%
+  mutate(percentage = round(n / sum(n) * 100, 2)) %>%
+  filter(!is.na(phase))
+
+write.csv(stone_artefacts_only_phases_tally,
+          "D:/My Documents/My UW/Research/1206 M2 excavation/1506 M2 excavation/data/stone_artefacts_finds_by_phases_tally.csv",
+          row.names = FALSE)
+
+plot_stone_artefacts_only_phases_tally <-
+ggplot(stone_artefacts_only_phases_tally,
+       aes(phase,
+           n)) +
+  geom_col(aes(fill = find)) +
+  scale_fill_viridis(discrete = TRUE,
+                     name = "Artefact type") +
+  theme_bw() +
+  ylab("Number of artefacts by type")
+
+plot_gs_percentage_by_phase <-
+stone_artefacts_only_phases_tally %>%
+  filter(find == "GS") %>%
+ggplot(aes(phase,
+           percentage)) +
+  geom_col(fill = viridis(6)[4]) +
+  scale_fill_discrete(guide = FALSE) +
+  theme_bw() +
+  ggtitle("Grinding stones as percentage of \nall artefacts in each phase")
+
+library(cowplot)
+
+ggdraw() +
+  draw_plot(plot_stone_artefacts_only_phases_tally,
+            0, 0, 1, 1) +
+  draw_plot(plot_gs_percentage_by_phase,
+            0.1, 0.7, 0.4, 0.25)
+
+ggsave("D:/My Documents/My UW/Research/1206 M2 excavation/1506 M2 excavation/data/plot_gs_percentage_by_phase.png", h = 7, w = 7)
+
