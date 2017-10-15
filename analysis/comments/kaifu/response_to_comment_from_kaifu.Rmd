@@ -300,13 +300,13 @@ vlines <- data.frame(id = rep(names(the_list), 2),
                                         2.6), 2)))
                      
                                     
-                                  
-
+                                
 ggplot(artefacts_per_litre_long,
        aes(depth, 
            `Artefacts/Litre`)) +
   geom_line() +
-  facet_wrap(~id, scales = "free_y") +
+  facet_wrap(~id, scales = "free_y"
+             ) +
   geom_vline(data = vlines, 
              aes(xintercept = xintercept),
              colour = "red") +
@@ -320,6 +320,127 @@ ggplot(artefacts_per_litre_long,
   ggtitle("MJB artefact density by depth in squares B-C 4-5-6")
 
 ggsave("figures/Artefact density by depth in squares B-C 4-5-6.png")
+```
+
+Show the dated samples from each square, by depth, so we can see the age constraints on each peak of artefacts
+
+```{r}
+# We need to cobone OSL and C14, with a col for square, a col for depth, a col for sample ID, and a col for approx age
+
+c14_ages_rugplot_data <- 
+c14_ages %>% 
+  select(square,
+         depth_below_ground_surface,
+         Bchron_Median,
+         Lab.ID) %>% 
+  dplyr::rename(grid_square = square,
+                age = Bchron_Median,
+         depth = depth_below_ground_surface,
+         id = Lab.ID) %>% 
+  mutate(age = round(age / 1000, 1))
+
+# For the OSL samples, what square was each sample taken from? We don
+# have this in our data so far. We can look EDF 8 from the Nature article. 
+
+# NE, NW, SWA, SWB, SWC,
+# E2, C4, B4,  B5,  B5, 
+
+osl_ages_rugplot_data <- 
+osl_ages %>% 
+  mutate(grid_square = case_when(
+  grepl("SW8C", Sample) ~ "B6",
+  grepl("NE1C", Sample) ~ "C6",
+  grepl("NE", Sample) ~ "E2",
+  grepl("NW", Sample) ~ "C4",
+  grepl("SW.{1,2}A", Sample) ~ "B4",
+  grepl("SW.{1,2}B", Sample) ~ "B5",
+  grepl("SW.{1,2}C", Sample) ~ "B5",
+  is.na(Sample) ~ "Unknown"
+)) %>% 
+  select(grid_square,
+         total_station_depth_below_surf,
+         osl_age,
+         Sample) %>% 
+ dplyr::rename(depth = total_station_depth_below_surf,
+               age = osl_age,
+               id = Sample) %>% 
+  mutate(depth = -depth)
+
+osl_ages_rugplot_data$id <- ifelse(osl_ages_rugplot_data$id == "NE1C", 
+                                   "NE1B", osl_ages_rugplot_data$id)
+
+# combine the two sets of dates
+date_for_plots <- 
+bind_rows(c14_ages_rugplot_data,
+          osl_ages_rugplot_data)
+
+date_for_plots <- 
+  date_for_plots %>% 
+  dplyr::rename(id = grid_square,
+                sample_id = id) %>% 
+  filter(id %in% artefacts_per_litre_long$id )
+
+# find max y-axis value for each sq to plot age points
+date_for_plots_max_y <- 
+artefacts_per_litre_long %>% 
+  group_by(id) %>% 
+  summarise(max_artefacts_litre = max(`Artefacts/Litre`, na.rm = TRUE))
+
+# add max height for red lines
+vlines <- 
+  vlines %>% 
+  left_join(date_for_plots_max_y)
+
+date_for_plots <- 
+  date_for_plots %>% 
+  left_join(date_for_plots_max_y) %>% 
+  filter(age > 50) %>% 
+  mutate( label = paste0(sample_id, ": ", age, " ka"))
+
+# plot with ages
+
+p <- 
+ggplot(artefacts_per_litre_long,
+       aes(depth, 
+           `Artefacts/Litre`)) +
+  geom_line() +
+  geom_segment(data = vlines, 
+             aes(x = xintercept,
+                 xend = xintercept,
+                 y = 0,
+                 yend = max_artefacts_litre + 2),
+             colour = "red") +
+  geom_text(data = vlines, 
+           aes(x = xintercept,
+               y = -0.5,
+               label = xintercept),
+           size = 2) +
+  geom_point(data = date_for_plots,
+             aes(depth,
+                 max_artefacts_litre + 2)) +
+  geom_text(data = date_for_plots,
+             aes(depth,
+                 max_artefacts_litre + 2,
+                 label = label),
+             size = 2,
+            angle = 45, 
+            hjust = -0.25,
+            vjust = 0) +
+  facet_wrap(~id, scales = "free_y"
+             ) +
+  theme_minimal() +
+  xlab("Depth below surface (m)") +
+  ggtitle("MJB artefact density by depth in squares B-C 4-5-6")
+
+svg("figures/Artefact density by depth in squares B-C 4-5-6.svg",
+    width = 10, height = 7)
+gt = ggplot_gtable(ggplot_build(p))
+gt$layout$clip = "off"
+grid.draw(gt)
+dev.off()
+
+# save, then tidy up in inkscape
+
 ```
 
 
