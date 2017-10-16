@@ -37,6 +37,32 @@ read_chunk("temp")
 unlink("temp")
 ```
 
+
+```{r}
+# run osl_ages <- get_osl_ages(cleaned_rotated_points_in_main_excavation_area) from SI.Rmd
+osl_ages$Sample <- ifelse(osl_ages$Sample == "NE1C", 
+                                   "NE1B", osl_ages$Sample)
+# Note that I seem to not to have the latest versions of the OSL ages, so let's get them in from the SI
+library(readxl)
+osl_ages_from_SI <-  read_excel("../../data/ages/OSL_Data_tables_all_samples_table_from_SI.xlsx")
+osl_ages_from_SI_ages  <- 
+  osl_ages_from_SI %>% 
+  separate(`Age (kyr)‡§`, into = c("osl_age", "other1", "osl_error", "other2"), sep = " ")
+osl_ages_from_SI_ages_depths <- left_join(osl_ages_from_SI_ages, osl_ages, by = "Sample")
+osl_ages_from_SI_ages_depths$osl_age <- as.numeric(osl_ages_from_SI_ages_depths$osl_age.x)
+osl_ages_from_SI_ages_depths$osl_error <- as.numeric(osl_ages_from_SI_ages_depths$osl_error.x)
+osl_ages <- osl_ages_from_SI_ages_depths
+
+# move depths for KTL ages
+osl_ages$total_station_depth_below_surf <- ifelse(grepl("KTL", osl_ages$Sample), 
+                                                  abs(osl_ages$`Depth below surface (m).x`),
+                                                  osl_ages$total_station_depth_below_surf)
+
+# make sure they are all -ve values
+osl_ages$total_station_depth_below_surf <- -(abs(osl_ages$total_station_depth_below_surf))
+
+```
+
 ## OSL ages for lowest artefact band are consistent across the site
 
 Kaifu and Shitaoka write:
@@ -186,6 +212,7 @@ grid.draw(gt)
 row_c <- c(2.4, 1.4, 0.4, -0.6, -1.6, -2.6, -3.6)
 row_mids <- row_c/2
 
+library(ggrepel)
 p1 <- 
 ggplot() +
   coord_equal() +
@@ -325,7 +352,7 @@ ggsave("figures/Artefact density by depth in squares B-C 4-5-6.png")
 Show the dated samples from each square, by depth, so we can see the age constraints on each peak of artefacts
 
 ```{r}
-# We need to cobone OSL and C14, with a col for square, a col for depth, a col for sample ID, and a col for approx age
+# We need to combine OSL and C14, with a col for square, a col for depth, a col for sample ID, and a col for approx age
 
 c14_ages_rugplot_data <- 
 c14_ages %>% 
@@ -349,12 +376,16 @@ osl_ages_rugplot_data <-
 osl_ages %>% 
   mutate(grid_square = case_when(
   grepl("SW8C", Sample) ~ "B6",
-  grepl("NE1C", Sample) ~ "C6",
+  grepl("NE1B", Sample) ~ "C6",
   grepl("NE", Sample) ~ "E2",
-  grepl("NW", Sample) ~ "C4",
+  grepl("NW8B", Sample) ~ "B5",
+  grepl("NW9B", Sample) ~ "B5",
+  grepl("NW", Sample) ~ "C5",
   grepl("SW.{1,2}A", Sample) ~ "B4",
   grepl("SW.{1,2}B", Sample) ~ "B5",
   grepl("SW.{1,2}C", Sample) ~ "B5",
+  grepl("KTL158", Sample) ~ "B4",
+  grepl("KTL162", Sample) ~ "B5",
   is.na(Sample) ~ "Unknown"
 )) %>% 
   select(grid_square,
@@ -364,10 +395,11 @@ osl_ages %>%
  dplyr::rename(depth = total_station_depth_below_surf,
                age = osl_age,
                id = Sample) %>% 
-  mutate(depth = -depth)
+  mutate(depth = abs(depth),
+         age = as.numeric(age)) %>% 
+  filter(grid_square != 'Unknown')
 
-osl_ages_rugplot_data$id <- ifelse(osl_ages_rugplot_data$id == "NE1C", 
-                                   "NE1B", osl_ages_rugplot_data$id)
+
 
 # combine the two sets of dates
 date_for_plots <- 
@@ -395,6 +427,7 @@ date_for_plots <-
   date_for_plots %>% 
   left_join(date_for_plots_max_y) %>% 
   filter(age > 50) %>% 
+  filter(age < 90) %>% 
   mutate( label = paste0(sample_id, ": ", age, " ka"))
 
 # plot with ages
@@ -432,7 +465,7 @@ ggplot(artefacts_per_litre_long,
   xlab("Depth below surface (m)") +
   ggtitle("MJB artefact density by depth in squares B-C 4-5-6")
 
-svg("figures/Artefact density by depth in squares B-C 4-5-6.svg",
+psvg("figures/Artefact density by depth in squares B-C 4-5-6.svg",
     width = 10, height = 7)
 gt = ggplot_gtable(ggplot_build(p))
 gt$layout$clip = "off"
@@ -487,6 +520,12 @@ ages_with_groups <- data.frame(ages = c(c14_ages_excludes$Bchron_Median/1000,
                                group = c(rep("c14", nrow(c14_ages_excludes)),
                                          rep("osl", nrow(osl_ages))))
 
+ages_with_groups <- 
+  ages_with_groups %>% 
+  filter(!is.na(depths)) %>% 
+  mutate(ages = as.numeric(as.character(ages)),
+         depths = abs(depths))
+
 #model without grouping variable
 fit0 <- lm(ages ~ poly(depths, 2), data = ages_with_groups)
 
@@ -505,6 +544,7 @@ library(ggrepel)
 
 formula <- y ~ poly(x, 2)
 
+p1 <- 
 ggplot() +
     geom_point(data = osl_ages,
              aes(-total_station_depth_below_surf, 
@@ -551,8 +591,20 @@ ggplot() +
   xlab("Depth below surface (m)") +
   ggtitle("All OSL ages with all C14 ages from B-C-D-E 3-5")
 
-ggsave("figures/All OSL ages with all C14 ages from B-C-D-E 3-5.png")
+ggsave("../../figures/All OSL ages with all C14 ages from B-C-D-E 3-5.png")
 ```
+
+For the BCA: 
+
+```{r}
+library(cowplot)
+plot_grid(p4, p1, 
+          labels = c("A", "B"), 
+          align = "v", 
+          ncol = 1)
+
+```
+
 
 
 Let's check for differences between the two age-depth models. As a general approach to detecting a significant difference between age-depth models, we first make linear models of the age-depth relationship for sub-sets of the samples (i.e. one model for all OSL samples, and one model for all C14 samples). We found that a quadratic model (i.e. second-order polynomial) is a simple model that fits all the subsets of our data very well. Then we compute a model that combines the data from two sub-sets, and adds a third variable, the grouping variable, that identifies the two models. We then compute an ANOVA to investigate the effect of the grouping variable on the fit of the models. If the ANOVA returns a significant difference, we conclude that the grouping variable has a significant effect, and thus the two sub-sets of the our data have significantly different age-depth models. 
@@ -617,6 +669,7 @@ library(ggrepel)
 
 formula <- y ~ poly(x, 2)
 
+p2 <- 
 ggplot() +
     geom_point(data = osl_ages_SWABC,
              aes(-total_station_depth_below_surf, 
@@ -663,7 +716,7 @@ ggplot() +
   xlab("Depth below surface (m)") +
   ggtitle("OSL ages from SW A-B-C and C14 ages from B-C-D-E 3-5")
 
-ggsave("figures/OSL ages from SW A-B-C and C14 ages from B-C-D-E 3-5.png")
+ggsave("../../figures/OSL ages from SW A-B-C and C14 ages from B-C-D-E 3-5.png")
 ```
 
 
@@ -722,6 +775,7 @@ library(ggrepel)
 
 formula <- y ~ poly(x, 2)
 
+p3 <- 
 ggplot() +
         geom_point(data = osl_ages_NE,
              aes(-total_station_depth_below_surf, 
@@ -779,7 +833,7 @@ ggplot() +
   xlab("Depth below surface (m)") +
   ggtitle("OSL ages and\nC14 ages from B-C-D-E 3-5")
 
-ggsave("figures/OSL ages from NW, SW A-B-C and C14 ages from B-C-D-E 3-5.png")
+ggsave("../../figures/OSL ages from NW, SW A-B-C and C14 ages from B-C-D-E 3-5.png")
 ```
 
 Comparing OSL for B4 (SW A) and B5 (SW B & C):
@@ -788,6 +842,11 @@ Comparing OSL for B4 (SW A) and B5 (SW B & C):
 # prepare data
 osl_ages_SWA <-  osl_ages[grepl("SW.*A", osl_ages$Sample), ]
 osl_ages_SWBC <-  osl_ages[grepl("SW.*B|SW.*C", osl_ages$Sample), ]
+# osl_ages_SWBC <- osl_ages_SWBC %>% filter(!Sample %in% c("SW4C",  X
+#                                                          "SW7B", #
+#                                                          "SW6B", X
+#                                                          "SW7C", X
+#                                                          "SW8C")) X
 ```
 
 ```{r}
@@ -797,15 +856,18 @@ osl_ages_SWBC <-  osl_ages[grepl("SW.*B|SW.*C", osl_ages$Sample), ]
 ages_with_groups <- data.frame(ages = c(osl_ages_SWA$osl_age,
                                         osl_ages_SWBC$osl_age),
                                depths = c(osl_ages_SWA$total_station_depth_below_surf,
-                                          osl_ages_SWB$total_station_depth_below_surf),
+                                          osl_ages_SWBC$total_station_depth_below_surf),
                                group = c(rep("B4 (SW A)", nrow(osl_ages_SWA)),
                                          rep("B5 (SW B & C)", nrow(osl_ages_SWBC))))
 
+# ages_with_groups <- filter(ages_with_groups, !ages %in% c(39.3, 30.4, 70.4, 62.7, 79.0))
+
 #model without grouping variable
-fit0 <- lm(ages ~ poly(depths, 2), data = ages_with_groups)
+n <- 2
+fit0 <- lm(ages ~ poly(depths, n), data = ages_with_groups)
 
 #model with grouping variable
-fit1 <- lm(ages ~ poly(depths, 2) * group, data = ages_with_groups)
+fit1 <- lm(ages ~ poly(depths, n) * group, data = ages_with_groups)
 
 #compare models 
 all_osl_B4_B5 <- anova(fit0, fit1)
@@ -816,8 +878,9 @@ df <- all_osl_B4_B5$Df[2]
 
 ```{r}
 library(ggrepel)
-formula <- y ~ poly(x, 2)
+formula <- y ~ poly(x, n)
 
+p4 <- 
 ggplot() +
     geom_point(data = osl_ages_SWA,
              aes(-total_station_depth_below_surf, 
@@ -862,7 +925,7 @@ ggplot() +
   xlab("Depth below surface (m)") +
   ggtitle("OSL ages from B4 (SW A) and B5 (SW B & C)")
 
-ggsave("figures/OSL ages from B4 (SW A) and B5 (SW B & C).png")
+ggsave("../../figures/OSL ages from B4 (SW A) and B5 (SW B & C).png")
 ```
 
 
@@ -901,6 +964,7 @@ pval <- round(all_osl_SWBC_NW$`Pr(>F)`[2], 3)
 library(ggrepel)
 formula <- y ~ poly(x, 2)
 
+p5 <- 
 ggplot() +
     geom_point(data = osl_ages_NW,
              aes(-total_station_depth_below_surf, 
@@ -944,7 +1008,7 @@ ggplot() +
   xlab("Depth below surface (m)") +
   ggtitle("OSL ages from C4 (NW) and B5 (SW B & C)")
 
-ggsave("figures/OSL ages from C4 (NW) and B5 (SW B & C).png")
+ggsave("../../figures/OSL ages from C4 (NW) and B5 (SW B & C).png")
 ```
 
 OSL front and back, NE and SWBC:
@@ -981,6 +1045,7 @@ pval <- round(all_osl_SWBC_NE$`Pr(>F)`[2], 3)
 library(ggrepel)
 formula <- y ~ poly(x, 2)
 
+p6 <- 
 ggplot() +
     geom_point(data = osl_ages_NE,
              aes(-total_station_depth_below_surf, 
@@ -1024,7 +1089,7 @@ ggplot() +
   xlab("Depth below surface (m)") +
   ggtitle("OSL ages from front (NE) and back (SW B & C)")
 
-ggsave("figures/OSL ages from front (NE) and back (SW B & C).png")
+ggsave("../../figures/OSL ages from front (NE) and back (SW B & C).png")
 ```
 
 
@@ -1063,6 +1128,7 @@ pval <- round(all_osl_SWABC_NW$`Pr(>F)`[2], 3)
 library(ggrepel)
 formula <- y ~ poly(x, 2)
 
+p7 <- 
 ggplot() +
     geom_point(data = osl_ages_SWABC,
              aes(-total_station_depth_below_surf, 
@@ -1106,7 +1172,7 @@ ggplot() +
   xlab("Depth below surface (m)") +
   ggtitle("OSL ages from NW and SW A, B & C")
 
-ggsave("figures/OSL ages from NW and SW A, B & C.png")
+ggsave("../../figures/OSL ages from NW and SW A, B & C.png")
 ```
 
 OSL NE and NW:
@@ -1143,6 +1209,7 @@ pval <- round(all_osl_NE_NW$`Pr(>F)`[2], 3)
 library(ggrepel)
 formula <- y ~ poly(x, 2)
 
+p8 <- 
 ggplot() +
     geom_point(data = osl_ages_NE,
              aes(-total_station_depth_below_surf, 
@@ -1186,7 +1253,7 @@ ggplot() +
   xlab("Depth below surface (m)") +
   ggtitle("OSL ages from NW and NE")
 
-ggsave("figures/OSL ages from NW and NE.png")
+ggsave("../../figures/OSL ages from NW and NE.png")
 ```
 
 
@@ -1195,6 +1262,7 @@ ggsave("figures/OSL ages from NW and NE.png")
 library(ggrepel)
 formula <- y ~ poly(x, 2)
 
+p9 <- 
 ggplot() +
     geom_point(data = osl_ages,
              aes(-total_station_depth_below_surf, 

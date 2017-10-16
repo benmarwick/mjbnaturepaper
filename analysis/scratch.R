@@ -1573,8 +1573,25 @@ library(plotly)
 ggplotly(MJB_C14_in_rows_4_6)
 
 
+#---------------------------------------------------------------
+##
+# get OSL ages from the published paper!
+library(tabulizer)
+library(tidyverse)
+f <- "D:/My Documents/My UW/Research/1206 M2 excavation/1506 M2 excavation/paper/Clarkson_Jacobs_Marwick_2017_SI.pdf"
+tab <- extract_tables(f, pages = 32)
+df <- data.frame(tab[[2]])
+df <- df[-c(1:4),]
+df <- df %>%
+  separate(X1, c("Sample", "depth"), sep = " ") %>%
+  mutate(X9 = as.character(X9)) %>%
+  separate(X9, into = c("osl_age", "other1", "osl_error", "other2"), sep = " ")
 
+write_csv(df, "D:/My Documents/My UW/Research/1206 M2 excavation/1506 M2 excavation/paper/mjbnaturepaper/analysis/data/ages/OSL_Data_tables_all_samples_table_from_SI.csv")
 
+# No, that's not very easy to work with. Let's take the table from the most recent word doc for the SI and make that a data frame
 
+library(readxl)
+osl_ages_from_SI <-  read_excel("analysis/data/ages/OSL_Data_tables_all_samples_table_from_SI.xlsx")
 
 
