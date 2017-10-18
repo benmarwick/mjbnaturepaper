@@ -860,7 +860,11 @@ ages_with_groups <- data.frame(ages = c(osl_ages_SWA$osl_age,
                                group = c(rep("B4 (SW A)", nrow(osl_ages_SWA)),
                                          rep("B5 (SW B & C)", nrow(osl_ages_SWBC))))
 
-# ages_with_groups <- filter(ages_with_groups, !ages %in% c(39.3, 30.4, 70.4, 62.7, 79.0))
+# subset only phase 2, 2.6 and 2.15 m
+ages_with_groups <- 
+  ages_with_groups %>% 
+  filter(depths <= -2.15) %>% 
+  filter(depths >= -2.6)
 
 #model without grouping variable
 n <- 2
@@ -882,6 +886,21 @@ formula <- y ~ poly(x, n)
 
 p4 <- 
 ggplot() +
+  geom_rect(data = data_frame(xmin = 2.15, 
+                            xmax = 2.6, 
+                            ymin = 0, 
+                            ymax = 100),
+          aes(xmin=xmin, 
+              xmax=xmax, 
+              ymin=ymin, 
+              ymax=ymax), 
+          fill = NA,
+          colour = "black") +
+  annotate("text", 
+           x=2.375, 
+           y=25, 
+           hjust = 0.5,
+           label = "Phase 2") +
     geom_point(data = osl_ages_SWA,
              aes(-total_station_depth_below_surf, 
                  osl_age),
@@ -915,15 +934,24 @@ ggplot() +
                  label = Sample),
              size = 2) +
    annotate("text",  x = 0.5, y = 75, hjust = 0,
-            label = paste0("Age-depth model comparison ANOVA\n",
+            label = paste0("Age-depth model comparison ANOVA for phase 2 only\n",
                            "Comparing OSL ages from B4 (SW A) and B5 (SW B & C)\n",
-                            "F = ", fval, ", df = ", df, ", p = ", pval, " (quadratic fits)",
-                           "\nModels are ", ifelse(pval <= 0.05, "", "not "), "significantly different" ), 
+                           
+                            "F = ", 
+                           fval, 
+                           ", df = ", 
+                           df, 
+                           ", p = ", 
+                           pval, " (quadratic fits)",
+                           "\nModels are ", 
+                           ifelse(pval <= 0.05, "", "not "), 
+                           "significantly different" ), 
             size = 2) +
   theme_minimal() +
   ylab("Age ka") +
   xlab("Depth below surface (m)") +
-  ggtitle("OSL ages from B4 (SW A) and B5 (SW B & C)")
+  ggtitle("Phase 2 OSL ages from B4 (SW A) and B5 (SW B & C)") 
+  
 
 ggsave("../../figures/OSL ages from B4 (SW A) and B5 (SW B & C).png")
 ```
