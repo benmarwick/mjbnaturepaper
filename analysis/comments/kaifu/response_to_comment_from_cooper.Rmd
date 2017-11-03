@@ -108,7 +108,7 @@ library(viridis)
     coord_equal()
 
   row_c = c(2.4, 1.4, 0.4, -0.6, -1.6, -2.6, -3.6)
-  nums = paste0("B", 7:2)
+  nums = paste0("B", 6:1)
   row_mids <-  row_c[-length(row_c)] + diff(row_c)/2
 
 library(grid)
