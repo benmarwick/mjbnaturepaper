@@ -1594,4 +1594,296 @@ write_csv(df, "D:/My Documents/My UW/Research/1206 M2 excavation/1506 M2 excavat
 library(readxl)
 osl_ages_from_SI <-  read_excel("analysis/data/ages/OSL_Data_tables_all_samples_table_from_SI.xlsx")
 
+#-------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+# did we get the phase numbers backwards in the chi-sq for raw materials?
+# or make some other mistake there? counts of artefacts seem very high
+
+B6_raw_materials <- readr::read_csv("data/stone_artefact_data/B6_raw_material_table.csv")
+
+## plot_raw_materials_technology <-
+##  raw_materials_technology_plots(B6_raw_materials, spit_depths_B6_output)
+
+# that fn does this:
+
+B6_raw_materials_technology_depths <-
+  B6_raw_materials %>%                        # from CSV file, ok
+  left_join(spit_depths_B6_output,            # ok
+            by = c("Spit" = "spit")) %>%      # of B6 spits & depths
+  # replacing each NA with interpolated values, ok
+  mutate(depth_below_surface = zoo::na.approx(depth_below_surface)) %>%
+  # compute the: thickess of each spit, and the mid-point of the
+  # depth of each spit, yes, ok
+  mutate(depth_diff = c(0, diff(.$depth_below_surface)),
+         x_centre = c(depth_below_surface[1]/2,
+                      zoo::rollmean(depth_below_surface, 2)),
+         Quartzite = Qtztite,
+         Quartz = Qtz)
+
+# check, what does rollmean do?
+1:5
+zoo::rollmean(1:5, 2)
+# gives the halfway point between each value
+
+# At this point we have a data frame, one row is one spit, one col
+# is one raw material. We also have spit depths.
+
+# Now we make a long table, one row is one spit-raw material pair, ok
+# 'value' is count of artefact of that raw material in that spit
+# `Artefacts per Litre` is a volumetric expression of artefact abundance.
+
+B6_raw_materials_plot_data <-
+  B6_raw_materials_technology_depths %>%
+  gather(`Raw material`,
+         value,
+         -Spit,
+         -depth_below_surface,
+         -`Volume Excavated`,
+         -depth_diff,
+         -x_centre) %>%
+  filter(`Raw material` %in% c("Quartzite",
+                               "Quartz",
+                               "`Crystal Qtz`",
+                               "Silcrete",
+                               "`Rare Quartzite (Brown and Dark Grey)`",
+                               "`Buff and Red Mudstone`",
+                               "`Fine Qtzite`",
+                               "Chert",
+                               "Volcanic",
+                               "Mica",
+                               "Glass",
+                               "`Gerowie Tuff`" ))  %>%
+  mutate(`Artefacts per Litre` = as.numeric(value)/`Volume Excavated`,
+         `Depth below surface (m)` = zoo::na.approx(round(depth_below_surface, 2)))
+
+# what spit is in what depth?
+B6_raw_materials_plot_data %>%
+  select(Spit, `Depth below surface (m)`) %>% View
+
+## chi-sq for raw material by phase
+## chi_sq_raw_material_by_phase_tbl <- chi_sq_raw_material_by_phase(plot_raw_materials_technology)
+
+# that fn does this:
+
+# drop some columns
+raw_materials_technology_chi <-
+  B6_raw_materials_plot_data %>%
+  dplyr::select(Spit, depth_below_surface, `Raw material`, value) %>%
+  arrange(desc(depth_below_surface))
+
+# explore the output here...
+raw_materials_technology_chi %>%
+  mutate(artefact_count = as.numeric(value)) %>%
+  arrange(desc(artefact_count))
+# yes, ok
+
+raw_materials_technology_chi %>%
+  mutate(artefact_count = as.numeric(value)) %>%
+  group_by(`Raw material`) %>%
+  summarise(sum(artefact_count))
+
+# compare to CSV
+
+sum(B6_raw_materials$Qtz) # 10,566
+
+raw_materials <-  c(
+  "Qtz",
+  "Crystal Qtz"   ,
+  "Silcrete"  ,
+  "Rare Quartzite (Brown and Dark Grey)",
+  "Buff and Red Mudstone" ,
+  "Fine Qtzite"            ,
+  "Chert"   ,
+  "Volcanic"  ,
+  "Mica"   ,
+  "Glass"     ,
+  "Gerowie Tuff"
+)
+
+B6_raw_materials %>%
+select(raw_materials) %>%
+  colSums()
+
+# it's ok, the raw material totals are still the same as what we put in.
+
+# group spits into phases
+
+# round the depths, convert to cm
+raw_materials_technology_chi$depth_below_surface_round <-
+  round(raw_materials_technology_chi$depth_below_surface, 2) * 100
+
+# get start and end of phases
+the_phases <- phases()
+start <- the_phases$upper * 100
+end <- c(350, (the_phases$lower * 100)[-1]) # extend depth to base of artefact
+
+# now we have
+
+# # A tibble: 7 x 3
+# phase upper lower
+# <dbl> <dbl> <dbl>
+#   1     1  2.30  2.70
+#   2     2  1.90  2.30
+#   3     3  1.50  1.90
+#   4     4  1.20  1.50
+#   5     5  0.85  1.20
+#   6     6  0.50  0.85
+#   7     7  0.00  0.50
+
+# comes from CC email 24/11/2016
+# "Ben, the phase depths are wrong for EDF6! [later became EDF7, the geoarch fig] Remember this is C2, where everything is substantially higher! So, we should probably go with these dpeths for each phase:"
+
+# 1. 2.7-2.3
+# 2. 2.3-2.0
+# 3.1.4-2.0
+# 4.1.2-1.4
+# 5.0.8-1.2
+# 6. 0.5-0.8
+# 7. 0-0.5
+
+# Compute which layer each spit belongs in using the
+# IRanges package
+
+# source("https://bioconductor.org/biocLite.R")
+# biocLite("GenomicRanges")
+require(IRanges)
+depth_values <-
+  IRanges(na.omit(raw_materials_technology_chi$depth_below_surface_round),
+          width = 1,
+          names = na.omit(raw_materials_technology_chi$depth_below_surface_round))
+ranges_for_phases <-
+  IRanges(start = start,
+          end = end,
+          names = the_phases$phase)
+olaps <- findOverlaps(depth_values, ranges_for_phases)
+phases_from_depths <- subjectHits(olaps)
+
+# attach phases to long data frame
+raw_materials_technology_chi$phases_from_depths <- phases_from_depths
+
+# check expectations...
+raw_materials_technology_chi %>%
+  group_by(phases_from_depths, `Raw material`) %>%
+  summarise(totals = sum(as.numeric(value)))
+
+# looks a bit odd, 1319 Quartz pieces in phase 1?
+
+# what spits are in phase 1? It going up to 2.3 m
+# perhaps the problem here is that the phase depths are for
+# back (C2), but the artefact data is for the front (B6)
+
+raw_materials_technology_chi %>%
+  group_by(phases_from_depths) %>%
+  summarise(highest_spit = min(Spit),
+            lowest_spit = max(Spit))
+
+
+# these are copied from the published Bayesian OSL figure
+phases_front <- tibble::frame_data(
+  ~phase, ~upper, ~lower,
+  1,     2.6,     4.6,
+  2,     2.15,    2.59,
+  3,     1.55,    2.149,
+  4,     0.95,    1.549,
+  5,     0.70,    0.949,
+  6,     -0.5,       0.69)
+
+# recompute depth-phases using this new set of depths
+# get start and end of phases
+the_phases <- phases_front
+start <- the_phases$upper * 100
+end <- the_phases$lower * 100 # extend depth to base of artefact
+
+
+depth_values <-
+  IRanges(na.omit(raw_materials_technology_chi$depth_below_surface_round),
+          width = 1,
+          names = na.omit(raw_materials_technology_chi$depth_below_surface_round))
+ranges_for_phases <-
+  IRanges(start = start,
+          end = end,
+          names = phases_front$phase)
+olaps <- findOverlaps(depth_values, ranges_for_phases)
+phases_from_depths <- subjectHits(olaps)
+
+# attach phases to long data frame
+raw_materials_technology_chi$phases_from_front_depths <- phases_from_depths
+
+# check to see what difference these front phase depths makes
+raw_materials_technology_chi %>%
+  group_by(phases_from_front_depths, `Raw material`) %>%
+  summarise(total_count = sum(as.numeric(value)))
+
+# # A tibble: 42 x 3
+# # Groups:   phases_from_front_depths [?]
+# phases_from_front_depths `Raw material` total_count
+# <int>          <chr>       <dbl>
+# 1                        1          Chert           1
+# 2                        1          Glass           0
+# 3                        1           Mica           0
+# 4                        1         Quartz          28
+# 5                        1      Quartzite          36
+# 6                        1       Silcrete           3
+# 7                        1       Volcanic           0
+
+# looks much better. So the problem was that my phase 1 actually included a bunch of phase 2 artefacts, because I'm using values for the back of the site, for the geoarch figure which has artefacts from C2. That's what I prepared the phases() fn for. But this is the front of the site, B6.
+
+
+
+
+# focus on  Qtztite, Qtz, Silcrete, Chert
+chi_sq_raw_material_by_phase_output_front <-
+  raw_materials_technology_chi %>%
+  dplyr::filter(!`Raw material` %in% c('Glass', 'Mica', 'Volcanic')) %>%
+  dplyr::select(phases_from_front_depths, `Raw material`, value) %>%
+  group_by(`Raw material`, phases_from_front_depths ) %>%
+  dplyr::summarise(artefact_count = sum(as.numeric(value))) %>%
+  tidyr::spread(key = `Raw material`, value = artefact_count, fill = 0)
+
+
+  # check totals
+  colSums(chi_sq_raw_material_by_phase_output_front)
+
+  # compare to
+  B6_raw_materials %>%
+    select(raw_materials) %>%
+    colSums()
+
+  # yes, amounts of raw materials are still ok
+
+# chi-sq for raw material by phase
+  chi_sq_raw_material_by_phase_output_front %>%
+    dplyr::select(-phases_from_front_depths) %>%
+    chisq.test()
+
+# # A tibble: 6 x 4
+# Chert Quartz Quartzite Silcrete
+# * <dbl>  <dbl>     <dbl>    <dbl>
+#   1     1     28        36        3
+# 2    69   1950       674       87
+# 3    51   2551       178       11
+# 4    59   3349       278       86
+# 5    23   1009        13        2
+# 6    10   1679        93        3
+# > # chi-sq for raw material by phase
+#   > chisq.test(chi_sq_raw_material_by_phase_output_front)
+#
+# Pearson's Chi-squared test
+#
+# data:  chi_sq_raw_material_by_phase_output_front
+# X-squared = 1118.5, df = 15, p-value < 2.2e-16
+#
+# Warning message:
+# In chisq.test(chi_sq_raw_material_by_phase_output_front) :
+# Chi-squared approximation may be incorrect
+
+# what are the phases of each spit?
+
+  raw_materials_technology_chi %>%
+    group_by(phases_from_front_depths) %>%
+    summarise(highest_spit = min(Spit),
+              lowest_spit = max(Spit))
+
+
+
 
