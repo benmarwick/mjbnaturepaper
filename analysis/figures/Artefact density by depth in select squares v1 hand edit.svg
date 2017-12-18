@@ -41,8 +41,8 @@
      id="namedview1801"
      showgrid="false"
      inkscape:zoom="0.93229167"
-     inkscape:cx="589.66944"
-     inkscape:cy="214.52451"
+     inkscape:cx="508.46628"
+     inkscape:cy="345.91554"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
@@ -717,7 +717,9 @@
        width="749.05286"
        height="524.33698"
        style="fill:#ffffff;fill-opacity:1;stroke:none"
-       id="rect255" />
+       id="rect255"
+       inkscape:export-xdpi="300"
+       inkscape:export-ydpi="300" />
     <path
        style="fill:none;stroke-width:0.533489;stroke-linecap:butt;stroke-linejoin:round;stroke:rgb(92.156863%,92.156863%,92.156863%);stroke-opacity:1;stroke-miterlimit:10;"
        d="M 33.699219 195.917969 L 189.367188 195.917969 "
