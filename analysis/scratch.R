@@ -1885,5 +1885,48 @@ chi_sq_raw_material_by_phase_output_front <-
               lowest_spit = max(Spit))
 
 
+# get OSL ages from published SI
+si_p_31 <- tabulizer::extract_tables("../../data/ages/Clarkson_Jacobs_Marwick_2017_SI.pdf", pages = 31, method = "data.frame")[[2]][-c(1:6), ]
+si_p_32 <- tabulizer::extract_tables("../../data/ages/Clarkson_Jacobs_Marwick_2017_SI.pdf", pages = 32, method = "data.frame")[[2]][-c(1:3), ]
+si_p_34 <- tabulizer::extract_tables("../../data/ages/Clarkson_Jacobs_Marwick_2017_SI.pdf", pages = 34,method = "data.frame")[[2]][-c(1:6), ]
+
+# Want three cols: Sample, osl_age, osl_error
+si_p_31_a <-
+  si_p_31 %>%
+  mutate(Sample = gsub("\\s.*", "", X038.nature22968.RESEARCH)) %>%
+  mutate(osl_age = as.numeric(gsub("\\s.*", "", SUPPLEMENTARY.INFORMATION))) %>%
+  select(-X038.nature22968.RESEARCH, -SUPPLEMENTARY.INFORMATION) %>%
+  mutate(Sample = if_else(Sample == "38.3", "SW11A", Sample ))
+
+si_p_32_a <-
+  si_p_32 %>%
+  mutate(Sample = gsub("\\s.*", "", X038.nature22968)) %>%
+  mutate(osl_age = as.numeric(gsub("\\s.*", "", X.6))) %>%
+  select(-X038.nature22968,
+         -  RESEARCH.SUPPLEMENTARY.INFORMATION,
+         -starts_with("X")) %>%
+  mutate(Sample = ifelse(Sample == "", NA, Sample )) %>%
+  mutate(Sample = zoo::na.locf(Sample)) %>%
+  filter(!is.na(osl_age))
+
+si_p_34_a <-
+  si_p_34 %>%
+  mutate(Sample = gsub("\\s.*", "", X038.nature22968.RESEARCH)) %>%
+  mutate(osl_age = as.numeric(gsub("\\s.*", "", SUPPLEMENTARY.INFORMATION))) %>%
+  select(-X038.nature22968.RESEARCH, -SUPPLEMENTARY.INFORMATION)
+
+si_osl_ages <-
+rbind(si_p_31_a,
+      si_p_32_a,
+      si_p_34_a) %>%
+  arrange(Sample)
+
+
+stringr::str_match(si_p_31$X038.nature22968.RESEARCH,
+                     "^\\w*\\s(\\d.\\d*)")[,2]
+
+
+
+
 
 
