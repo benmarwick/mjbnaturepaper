@@ -290,6 +290,9 @@ si_p_31_a <-
 
 si_p_31_a$depth[which(is.na(si_p_31_a$depth))] <- 2.28
 
+# ensure that we use 51.7 for SW11A
+si_p_31_a$osl_age[which(si_p_31_a$Sample == "SW11A")] <- 51.7
+
 si_p_32_a <-
   si_p_32 %>%
   mutate(Sample = gsub("\\s.*", "", X038.nature22968)) %>%
@@ -370,14 +373,14 @@ si_osl_ages %>%
   grepl("NE", Sample) ~ "E2",
   grepl("NW8B", Sample) ~ "B5",
   grepl("NW9B", Sample) ~ "B5",
-  grepl("NW", Sample) ~ "C4",
+  grepl("NW", Sample) ~ "C5",
   grepl("SW.{1,2}A", Sample) ~ "B4",
   grepl("SW.{1,2}B", Sample) ~ "B5",
   grepl("SW.{1,2}C", Sample) ~ "B5",
-  grepl("KTL158", Sample) ~ "B4",
-  grepl("KTL162", Sample) ~ "B5",
-  grepl("KTL164", Sample) ~ "B5",
-  grepl("KTL165", Sample) ~ "B5",
+  grepl("KTL158", Sample) ~ "B4", # auger
+  grepl("KTL162", Sample) ~ "B4", # DEF30
+  grepl("KTL164", Sample) ~ "B5", # DEF30
+  grepl("KTL165", Sample) ~ "B5", # DEF30
   is.na(Sample) ~ "Unknown"
 )) %>% 
   select(grid_square,
