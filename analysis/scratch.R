@@ -1510,6 +1510,7 @@ raw_materials_technology_chi$depth_below_surface_round <-
   round(raw_materials_technology_chi$depth_below_surface, 2) * 100
 
 # get start and end of phases
+the_phases <- phases()
 start <- the_phases$upper * 100
 end <- c(350, (the_phases$lower * 100)[-1]) # extend depth to base of artefact
 
@@ -1596,6 +1597,11 @@ osl_ages_from_SI <-  read_excel("analysis/data/ages/OSL_Data_tables_all_samples_
 
 #-------------------------------------------------------------------------------
 #------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
+#
+# Re-do the table of Supplementary Table 15
+
+# because we used the back depths, and should have used the front depths
 # did we get the phase numbers backwards in the chi-sq for raw materials?
 # or make some other mistake there? counts of artefacts seem very high
 
@@ -1860,11 +1866,11 @@ chi_sq_raw_material_by_phase_output_front <-
 # Chert Quartz Quartzite Silcrete
 # * <dbl>  <dbl>     <dbl>    <dbl>
 #   1     1     28        36        3
-# 2    69   1950       674       87
-# 3    51   2551       178       11
-# 4    59   3349       278       86
-# 5    23   1009        13        2
-# 6    10   1679        93        3
+#   2    69   1950       674       87
+#   3    51   2551       178       11
+#   4    59   3349       278       86
+#   5    23   1009        13        2
+#   6    10   1679        93        3
 # > # chi-sq for raw material by phase
 #   > chisq.test(chi_sq_raw_material_by_phase_output_front)
 #

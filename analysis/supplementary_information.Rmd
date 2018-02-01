@@ -81,6 +81,7 @@ raw_materials_technology_plots(B6_raw_materials, spit_depths_B6_output)
 # chi-sq for raw material by phase
 chi_sq_raw_material_by_phase_tbl <- chi_sq_raw_material_by_phase(plot_raw_materials_technology)
 
+# this creates the table as originally published, which we now know is wrong.
 chisq.test(chi_sq_raw_material_by_phase_tbl)
 
 
