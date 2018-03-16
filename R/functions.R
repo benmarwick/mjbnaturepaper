@@ -2095,7 +2095,7 @@ get_c14_ages <- function(cleaned_rotated_points_in_main_excavation_area){
                              ageSds=c14_errors,
                              calCurves=rep('intcal13', length(c14_ages)))
   # First create age samples for each date
-  age_samples = Bchron::SampleAges(ages_cal)
+  age_samples = Bchron::sampleAges(ages_cal)
   # Now summarise them with quantile - this gives a 95% credible interval
   credible_ints <- apply(age_samples,2,quantile,prob=c(0.025,0.975))
 
