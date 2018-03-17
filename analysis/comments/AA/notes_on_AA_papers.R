@@ -1,3 +1,5 @@
+
+#- Supp table 15 chi-square -------------------------------------------------------------
 # Re-do the table of Supplementary Table 15
 
 # because we used the back depths, and should have used the front depths
@@ -288,7 +290,9 @@ raw_materials_technology_chi %>%
   group_by(phases_from_front_depths) %>%
   summarise(highest_spit = min(Spit),
             lowest_spit = max(Spit))
-#-------------------------------------------------------------------------------
+
+
+#-  3d plot of lithics and dating sample locations --------------------------------
 
 # check again the locations of SW-B and SW-C OSL samples
 surf <- 100.693213
@@ -356,6 +360,15 @@ stray_osl_points <-
   cleaned_rotated_points_in_main_excavation_area %>%
   filter(str_detect(Description,
                     "NE_SECT_OSL|OSL_NE_1A|OSL_SW_NA|GAMMA")) %>%
+  select(Description,
+         Ynew,
+         Xnew_flipped,
+         Elevation)
+
+end_level_corners <-
+  cleaned_rotated_points_in_main_excavation_area %>%
+  filter(str_detect(Description,
+                    "^EL_")) %>%
   select(Description,
          Ynew,
          Xnew_flipped,
@@ -455,6 +468,14 @@ three_d_plot_data <-
                      Ynew,
                      Elevation,
                      colour) ) %>%
+  bind_rows(end_level_corners %>%
+              mutate(ID = Description,
+                     colour = "end level") %>%
+              select(ID,
+                     Xnew_flipped,
+                     Ynew,
+                     Elevation,
+                     colour) ) %>%
   select(-osl_sample,
          -age) %>%
   mutate(size = ifelse(colour == "c14", 3,
@@ -476,9 +497,416 @@ three_d_plot_data %>%
   add_markers()
 
 # save the page with the plot
-htmlwidgets::saveWidget(p, "mjb_lithics_osl_and_c14_sample_locations.html")
+htmlwidgets::saveWidget(p, "mjb_lithics_osl_and_c14_sample_locations-and_end_levels.html")
+
+#- density plot with ages, with C and B only------------------------------------
+# density plot with C and B only
+
+# <!-- run code from prepare_data chunk in supplementary information-->
+
+# only plot one point per artefact (some artefacts have multiple total station points)
+library(viridis)
+stone_artefacts_only_one <-
+  stone_artefacts_only %>%
+  group_by(Description, find) %>%
+  dplyr::summarise(Xnew_flipped = mean(Xnew_flipped),
+                   depth_below_ground_surface = mean(depth_below_ground_surface))
+
+# determined by plotting row C end levels
+row_c <- c(2.4, 1.4, 0.4, -0.6, -1.6, -2.6, -3.6)
+row_mids <- row_c/2
+size = 0.25
+
+library(readxl)
+artefacts_per_litre <- read_excel(str_glue('{here::here()}/analysis/data/stone_artefact_data/Artefacts per litre discard BC4-6 by depth.xlsx'))
+
+C2_3 <- read_excel(str_glue('{here::here()}/analysis/data/stone_artefact_data/Artefacts per litre discard BC4-6 by depth.xlsx'), sheet = 2)
+
+names(C2_3) <- C2_3[1, ]
+C2_3 <- C2_3[-1, ]
+C2_3 <- map_df(C2_3, as.numeric)
+
+C4 <- artefacts_per_litre[1:nrow(artefacts_per_litre) , 1:4]
+names(C4) <- C4[1, ]
+C4 <- C4[-1, ]
+C4 <- map_df(C4, as.numeric)
+
+B4 <- artefacts_per_litre[1:nrow(artefacts_per_litre) , 6:11]
+names(B4) <- B4[1, ]
+B4 <- B4[-1, ]
+B4 <- map_df(B4, as.numeric)
+
+B5 <- artefacts_per_litre[1:nrow(artefacts_per_litre) , 13:16]
+names(B5) <- B5[1, ]
+B5 <- B5[-1, ]
+B5 <- map_df(B5, as.numeric)
+
+B6 <- artefacts_per_litre[1:nrow(artefacts_per_litre) , 18:22]
+names(B6) <- B6[1, ]
+B6 <- B6[-1, ]
+B6 <- map_df(B6, as.numeric)
+
+C5 <- artefacts_per_litre[1:nrow(artefacts_per_litre) , 24:28]
+names(C5) <- C5[1, ]
+C5 <- C5[-1, ]
+C5 <- map_df(C5, as.numeric)
+
+C6 <- artefacts_per_litre[1:nrow(artefacts_per_litre) , 30:34]
+names(C6) <- C6[1, ]
+C6 <- C6[-1, ]
+C6 <- map_df(C6, as.numeric)
+
+# for E2 let's use plotted finds
+E2_artefacts <- stone_artefacts_only %>%
+  filter(find == "L") %>%
+  filter(grepl("E2", .$Description)) %>%
+  mutate(Spit = as.numeric(gsub("//d", "", spit))) %>%
+  group_by(Spit) %>%
+  tally()
+
+E2_depths <- # 42 rows
+  cleaned_rotated_points_in_main_excavation_area %>%
+  filter(grepl("E2", .$Description)) %>%
+  filter(grepl("EL", .$Description)) %>%
+  group_by(spit) %>%
+  summarise(m_d = mean(depth_below_ground_surface, na.rm = TRUE)) %>%
+  mutate(Spit = as.numeric(gsub("[A-B]", "", spit))) %>%
+  arrange(Spit) %>%
+  distinct(Spit, .keep_all = TRUE)
+
+E2_depths$E2_depths_diffs <- abs(c(0, diff(E2_depths$m_d)))
+E2_depths$vol <- E2_depths$E2_depths_diffs * 100 * 100 / 1000
+
+E2 <-
+  E2_artefacts %>%
+  left_join(E2_depths) %>%
+  mutate(artefacts_per_cubic_m = n / vol) %>%
+  select(-spit, -n, -vol, -E2_depths_diffs) %>%
+  rename(`Artefacts/Litre` =  artefacts_per_cubic_m) %>%
+  rename(depth = m_d)
+
+# or let's use whatever Chris sent, not quite sure how he got that
+E2 <- read_excel(str_glue('{here::here()}/analysis/data/stone_artefact_data/E2 7mm and plotted lithics per litre.xlsx'))
 
 
+# combine these into one df
+the_list <- list(
+  "B4" = B4,
+  "B5" = B5,
+  "B6" = B6,
+  "C2/3" = C2_3,
+  "C4" = C4,
+  "C5" = C5,
+  "C6" = C6,
+  "E2" = E2
+)
+artefacts_per_litre_long <-
+  bind_rows(the_list,
+            .id = "id")
+
+# Depth in two cols...
+artefacts_per_litre_long$depth <-
+  with(artefacts_per_litre_long, ifelse(is.na(depth),
+                                        Depth, depth))
+
+# make facets in specific order
+order_we_want <- c("E2",   "B4",  "B5",   "B6" ,
+                   "C2/3", "C4",  "C5",   "C6")
+artefacts_per_litre_long$id_f <-
+  factor(artefacts_per_litre_long$id,
+         levels= order_we_want)
+
+# draw vertical lines to show phases
+# for back we use  1.90  2.30
+# for others we use 2.15-2.6
+artefacts_per_litre_long <-
+  artefacts_per_litre_long %>%
+  mutate(phase_two_upper =
+           if_else(id_f %in% c("C4", "C5","C6", "B4", "B5", "B6"),
+                   2.15, 1.9)) %>%
+  mutate(phase_two_lower =
+           if_else(id_f %in% c("C4", "C5","C6", "B4", "B5", "B6"),
+                   2.6, 2.3))
+
+
+ggplot(artefacts_per_litre_long,
+       aes(depth,
+           `Artefacts/Litre`)) +
+  geom_line() +
+  facet_wrap(~id_f, scales = "free_y", nrow = 2
+  ) +
+  geom_vline(aes(xintercept = phase_two_upper),
+             colour = "red") +
+  geom_vline(aes(xintercept = phase_two_lower),
+             colour = "red") +
+  geom_text(aes(x = phase_two_upper,
+                y = -0.5,
+                label = phase_two_upper),
+            size = 2) +
+  geom_text(aes(x = phase_two_lower,
+                y = -0.5,
+                label = phase_two_lower),
+            size = 2) +
+  ylim(0, NA) +
+  theme_minimal() +
+  xlab("Depth below surface (m)") +
+  ggtitle("MJB artefact density by depth in select squares")
+
+
+# get OSL ages from published SI, to be sure we have the right ones
+si_p_31 <- tabulizer::extract_tables(str_glue('{here::here()}/analysis/data/ages/Clarkson_Jacobs_Marwick_2017_SI.pdf'), pages = 31, method = "data.frame")[[2]][-c(1:5), ]
+si_p_32 <- tabulizer::extract_tables(str_glue('{here::here()}/analysis/data/ages/Clarkson_Jacobs_Marwick_2017_SI.pdf'), pages = 32, method = "data.frame")[[2]][-c(1:3), ]
+si_p_34 <- tabulizer::extract_tables(str_glue('{here::here()}/analysis/data/ages/Clarkson_Jacobs_Marwick_2017_SI.pdf'), pages = 34,method = "data.frame")[[2]][-c(1:5), ]
+
+# Want two cols: Sample, osl_age
+si_p_31_a <-
+  si_p_31 %>%
+  mutate(Sample = gsub("\\s.*", "", X038.nature22968.RESEARCH)) %>%
+  mutate(depth = as.numeric(stringr::str_match(X038.nature22968.RESEARCH,
+                                               "^\\w*\\s(\\d.\\d*)")[,2])) %>%
+  mutate(osl_age = as.numeric(gsub("\\s.*", "", SUPPLEMENTARY.INFORMATION))) %>%
+  select(-X038.nature22968.RESEARCH, -SUPPLEMENTARY.INFORMATION) %>%
+  mutate(Sample = if_else(Sample == "38.3", "SW11A", Sample ))
+
+si_p_31_a$depth[which(is.na(si_p_31_a$depth))] <- 2.28
+
+# ensure that we use 51.7 for SW11A
+si_p_31_a$osl_age[which(si_p_31_a$Sample == "SW11A")] <- 51.7
+
+si_p_32_a <-
+  si_p_32 %>%
+  mutate(Sample = gsub("\\s.*", "", X038.nature22968)) %>%
+  mutate(osl_age = as.numeric(gsub("\\s.*", "", X.6))) %>%
+  mutate(depth = as.numeric(stringr::str_match(X038.nature22968,
+                                               "^\\w*\\s(\\d.\\d*)")[,2])) %>%
+  select(-X038.nature22968,
+         -  RESEARCH.SUPPLEMENTARY.INFORMATION,
+         -starts_with("X")) %>%
+  mutate(Sample = ifelse(Sample == "", NA, Sample ))
+
+# patch up the ages that have both CAM and MAM
+si_p_32_a$Sample[c(15,17,18,20,24,26,28,30)] <-
+  c("SW3B", "SW3B",
+    "SW3A", "SW3A",
+    "NW3", "NW3",
+    "NW2", "NW2")
+
+si_p_32_a$depth[which(is.na(si_p_32_a$depth))] <-
+  c(0.85, 0.85,
+    0.85, 0.85,
+    0.54, 0.54,
+    0.33, 0.33)
+
+si_p_32_a <-
+  si_p_32_a %>%
+  filter(!is.na(osl_age))
+
+si_p_34_a <-
+  si_p_34 %>%
+  mutate(Sample = gsub("\\s.*", "", X038.nature22968.RESEARCH)) %>%
+  mutate(osl_age = as.numeric(gsub("\\s.*", "", SUPPLEMENTARY.INFORMATION))) %>%
+  mutate(depth = -as.numeric(stringr::str_match(X038.nature22968.RESEARCH,
+                                                "^\\w*\\s(-\\d.\\d*)")[,2])) %>%
+  select(-X038.nature22968.RESEARCH, -SUPPLEMENTARY.INFORMATION)
+
+si_osl_ages <-
+  rbind(si_p_31_a,
+        si_p_32_a,
+        si_p_34_a) %>%
+  arrange(osl_age)
+
+# get depth data from the earlier version of osl_ages
+osl_ages2 <-
+  osl_ages %>%
+  select(Sample, total_station_depth_below_surf) %>%
+  left_join(si_osl_ages)
+
+# We need to combine OSL and C14, with a col for square, a col for depth, a col for sample ID, and a col for approx age
+
+c14_ages_rugplot_data <-
+  c14_ages %>%
+  select(square,
+         depth_below_ground_surface,
+         Bchron_Median,
+         Lab.ID) %>%
+  dplyr::rename(grid_square = square,
+                age = Bchron_Median,
+                depth = depth_below_ground_surface,
+                id = Lab.ID) %>%
+  mutate(age = round(age / 1000, 1))
+
+# For the OSL samples, what square was each sample taken from? We don
+# have this in our data so far. We can look EDF 8 from the Nature article.
+
+# NE, NW, SWA, SWB, SWC,
+# E2, C4, B4,  B5,  B5,
+
+osl_ages_rugplot_data <-
+  si_osl_ages %>%
+  mutate(grid_square = case_when(
+    grepl("SW8C", Sample) ~ "B6",
+    grepl("NE1B", Sample) ~ "C6",
+    grepl("NE", Sample) ~ "E2",
+    grepl("NW8B", Sample) ~ "B5",
+    grepl("NW9B", Sample) ~ "B5",
+    grepl("NW", Sample) ~ "C5",
+    grepl("SW.{1,2}A", Sample) ~ "B4",
+    grepl("SW.{1,2}B", Sample) ~ "B5",
+    grepl("SW.{1,2}C", Sample) ~ "B5",
+    grepl("KTL158", Sample) ~ "B4", # auger
+    grepl("KTL162", Sample) ~ "B4", # DEF30
+    grepl("KTL164", Sample) ~ "B5", # DEF30
+    grepl("KTL165", Sample) ~ "B5", # DEF30
+    is.na(Sample) ~ "Unknown"
+  )) %>%
+  select(grid_square,
+         #total_station_depth_below_surf,
+         depth,
+         osl_age,
+         Sample) %>%
+  dplyr::rename( # depth = total_station_depth_below_surf,
+    age = osl_age,
+    id = Sample) %>%
+  mutate( # depth = abs(depth),
+    age = as.numeric(age)) %>%
+  filter(grid_square != 'Unknown')
+
+
+
+# combine the two sets of dates
+date_for_plots <-
+  bind_rows(c14_ages_rugplot_data,
+            osl_ages_rugplot_data)
+
+date_for_plots <-
+  date_for_plots %>%
+  dplyr::rename(id = grid_square,
+                sample_id = id) %>%
+  filter(id %in% artefacts_per_litre_long$id )
+
+# find max y-axis value for each sq to plot age points
+date_for_plots_max_y <-
+  artefacts_per_litre_long %>%
+  group_by(id) %>%
+  summarise(max_artefacts_litre = max(`Artefacts/Litre`, na.rm = TRUE))
+
+# add max height for red lines
+vlines <-
+  artefacts_per_litre_long %>%
+  select(id, phase_two_upper, phase_two_lower) %>%
+  gather(value, xintercept, -id) %>%
+  select(-value) %>%
+  distinct(.keep_all = TRUE)
+
+vlines <-
+  vlines %>%
+  left_join(date_for_plots_max_y)
+
+date_for_plots <-
+  date_for_plots %>%
+  left_join(date_for_plots_max_y) %>%
+  filter(age > 50) %>%
+  filter(age < 90) %>%
+  mutate( label = paste0(sample_id, ": ", age, " ka"))
+
+# plot with ages
+vlines$id_f <- factor(vlines$id, levels = order_we_want)
+date_for_plots$id_f <- factor(date_for_plots$id, levels = order_we_want)
+
+p <-
+  ggplot(artefacts_per_litre_long,
+         aes(depth,
+             `Artefacts/Litre`)) +
+  geom_line() +
+  geom_segment(data = vlines,
+               aes(x = xintercept,
+                   xend = xintercept,
+                   y = 0,
+                   yend = max_artefacts_litre + 2),
+               colour = "red") +
+  geom_text(data = vlines,
+            aes(x = xintercept,
+                y = - max_artefacts_litre / 30,
+                label = xintercept),
+            size = 2) +
+  geom_point(data = date_for_plots,
+             aes(depth,
+                 max_artefacts_litre + 2)) +
+  geom_text(data = date_for_plots,
+            aes(depth,
+                max_artefacts_litre + 2,
+                label = label),
+            size = 2,
+            angle = 45,
+            hjust = -0.25,
+            vjust = 0) +
+  facet_wrap(~id_f,
+             scales = "free_y",
+             nrow = 2
+  ) +
+  theme_minimal() +
+  xlab("Depth below surface (m)") # +
+# ggtitle("MJB artefact density by depth in select squares")
+
+
+library(grid)
+svg(str_glue('{here::here()}/analysis/figures/Artefact density by depth in select squares.svg'),
+    width = 10, height = 7)
+gt = ggplot_gtable(ggplot_build(p))
+gt$layout$clip = "off"
+grid.draw(gt)
+dev.off()
+
+
+#- section plot with B and C only-----------------------------------------------------
+
+stone_artefacts_only_one_B_C <-
+  stone_artefacts_only %>%
+  group_by(Description, find) %>%
+  dplyr::summarise(Xnew_flipped = mean(Xnew_flipped),
+                   Ynew = mean(Ynew),
+                   depth_below_ground_surface = mean(depth_below_ground_surface)) %>%
+  filter(find == "L") %>%
+  filter(str_detect(Description, "_B|_C")) %>%
+  mutate(square = if_else(str_detect(Description, "_B"), "B",
+                          if_else(str_detect(Description, "_C"), "C",
+                          "NA"))) %>%
+  ungroup()
+
+# determined by plotting row C end levels
+row_c = c(2.4, 1.4, 0.4, -0.6, -1.6, -2.6, -3.6)
+square_labels <-
+  data_frame(names = map_chr(6:1, ~str_glue('B{.x}/C{.x}')),
+             row_mids =  row_c[-length(row_c)] + diff(row_c)/2)
+
+ggplot(stone_artefacts_only_one_B_C,
+       aes(Xnew_flipped,
+           depth_below_ground_surface)) +
+  geom_point(aes(colour = square),
+             size = 0.5) +
+  coord_equal() +
+  scale_y_reverse() +
+  theme_minimal() +
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        # remove the vertical grid lines
+        panel.grid.major.x = element_blank() ,
+        panel.grid.minor.x = element_blank() ,
+        # explicitly set the horizontal lines (or they will disappear too)
+        panel.grid.major.y = element_line( size=.1,
+                                           color="grey80" ) ) +
+  geom_vline(xintercept = row_c,
+             colour = "grey80") +
+  geom_text(data = square_labels,
+            aes(row_mids,
+                y = -0.4,
+                label = names)) +
+  xlab("") +
+  ylab("Depth below ground surface (m)") +
+  ggtitle("Section view of stone artefacts from squares B and C")
+
+ggsave(str_glue('{here::here()}/analysis/figures/section_view_of_stone_artefacts_from_squares_b_and_c.png'))
 
 
 
