@@ -236,8 +236,6 @@ raw_materials_technology_chi %>%
 # looks much better. So the problem was that my phase 1 actually included a bunch of phase 2 artefacts, because I'm using values for the back of the site, for the geoarch figure which has artefacts from C2. That's what I prepared the phases() fn for. But this is the front of the site, B6.
 
 
-
-
 # focus on  Qtztite, Qtz, Silcrete, Chert
 chi_sq_raw_material_by_phase_output_front <-
   raw_materials_technology_chi %>%
@@ -353,7 +351,7 @@ osl_1989_points <-
             meanX = mean(X),
             maxY = max(Y),
             Elevation = mean(c(elevation_max, elevation_min)))
-write.csv(osl_1989_points, "E:/My Documents/My UW/Research/1206 M2 excavation/Section photos/Depth of 1989 OSL samples/osl_1989_points.csv")
+# write.csv(osl_1989_points, "E:/My Documents/My UW/Research/1206 M2 excavation/Section photos/Depth of 1989 OSL samples/osl_1989_points.csv")
 
 # get the osl samples from the NE and SW (back of site)
 stray_osl_points <-
@@ -375,6 +373,7 @@ end_level_corners <-
          Elevation)
 
 # where do they plot?
+library(ggrepel)
 
 p <-
   ggplot() +
@@ -420,6 +419,9 @@ p <-
   theme_minimal()
 
 ggplotly(p)
+
+
+# 3d interactive plot of lithics and ages -------------------
 
 
 # can we get a 3d plot of lithics and ages?
@@ -498,6 +500,176 @@ three_d_plot_data %>%
 
 # save the page with the plot
 htmlwidgets::saveWidget(p, "mjb_lithics_osl_and_c14_sample_locations-and_end_levels.html")
+
+# plan view of OSL ages on site grid ---------------
+
+row_c = c(2.35, 1.4, 0.4, -0.6, -1.6, -2.6, -3.6)
+col_c = c(-1.5, -0.5, 0.5, 1.5, 2.5)
+col_labels <-
+  data_frame(names = 6:1,
+             row_mids =  row_c[-length(row_c)] + diff(row_c)/2)
+row_labels <-
+  data_frame(names = LETTERS[2:5],
+             col_mids =  col_c[-length(col_c)] + diff(col_c)/2)
+row_c_df <- enframe(row_c)
+col_c_df <- enframe(col_c)
+
+# one giant data frame
+library(ggrepel)
+p_plan <-
+  ggplot() +
+
+  geom_point(data = three_d_plot_data %>% filter(colour == 'end level'),
+             aes(Xnew_flipped,
+                 Ynew),
+             colour = "green",
+             alpha = 0.6,
+             size = 0.2) +
+
+  geom_point(data = three_d_plot_data %>% filter(colour == 'stone artefact'),
+             aes(Xnew_flipped,
+                 Ynew),
+             colour = "orange",
+             alpha = 0.6,
+             size = 0.2) +
+
+  geom_point(data = three_d_plot_data %>% filter(colour == 'osl',
+                                                 !str_detect(ID, "KTL|TL")),
+             aes(Xnew_flipped,
+                 Ynew),
+             colour = "blue",
+             alpha = 1,
+             size = 1.5) +
+
+  geom_text_repel(data = three_d_plot_data %>% filter(colour == 'osl',
+                                                      !str_detect(ID, "KTL|TL")),
+                  aes(Xnew_flipped,
+                      Ynew,
+                      label = ID)) +
+
+  geom_segment(data = row_c_df,
+               aes(x = value,
+                   y = rep(first(col_c_df$value), nrow(row_c_df)),
+                   xend = value,
+                   yend = rep(last(col_c_df$value), nrow(row_c_df))),
+               colour = "black") +
+
+  geom_segment(data = col_c_df,
+               aes(y = value,
+                   x = rep(last(row_c_df$value), nrow(col_c_df)),
+                   yend = value,
+                   xend = rep(first(row_c_df$value), nrow(col_c_df))),
+               colour = "black") +
+
+  geom_text(data = col_labels,
+            aes(x = row_mids,
+                y = rep(-2.5, nrow(col_labels)),
+                label = names),
+                fontface = "bold",
+                size = 5) +
+
+  geom_text(data = row_labels,
+            aes(y = col_mids,
+                x = rep(-3.8, nrow(row_labels)),
+                label = names),
+                fontface = "bold",
+                size = 5) +
+
+  theme_minimal() +
+
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        # remove the  grid lines
+        panel.grid.major.x = element_blank() ,
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.y = element_blank() ,
+        panel.grid.minor.y = element_blank()) +
+
+  coord_equal()
+
+ggsave(here::here('analysis/figures/mjb_plan_view_osl_lithics_end_levels.png'),
+       h = 10,
+       w = 10)
+
+# separate data frames
+p_plan <-
+  ggplot() +
+  geom_point(data = stone_artefacts_only,
+             aes(Xnew_flipped,
+                 Ynew),
+             size = 0.2,
+             alpha = 0.4,
+             colour = "orange") +
+
+  geom_point(data = end_level_corners,
+             aes(Xnew_flipped,
+                 Ynew),
+             size = 0.2,
+             alpha = 0.1,
+             colour = "blue") +
+
+  geom_point(data = c14_ages,
+             aes(Xnew_flipped,
+                 Ynew ),
+             colour = "green") +
+
+  geom_point(data = osl_ages,
+             aes(Xnew_flipped,
+                 Ynew ),
+             colour = "red") +
+
+  geom_text_repel(data = osl_ages,
+                  aes(Xnew_flipped,
+                      Ynew,
+                      label = paste0(osl_age, " (", Sample, ")" )),
+                  size = 3) +
+
+  geom_segment(data = row_c_df,
+               aes(x = value,
+                   y = rep(first(col_c_df$value), nrow(row_c_df)),
+                   xend = value,
+                   yend = rep(last(col_c_df$value), nrow(row_c_df))),
+               colour = "black") +
+
+  geom_segment(data = col_c_df,
+               aes(y = value,
+                   x = rep(last(row_c_df$value), nrow(col_c_df)),
+                   yend = value,
+                   xend = rep(first(row_c_df$value), nrow(col_c_df))),
+               colour = "black") +
+
+  geom_text(data = col_labels,
+            aes(x = row_mids,
+                y = rep(-2, nrow(col_labels)),
+                label = names)) +
+
+  geom_text(data = row_labels,
+            aes(y = col_mids,
+                x = rep(-3.8, nrow(row_labels)),
+                label = names)) +
+
+  theme_minimal() +
+
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.y=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks.y=element_blank(),
+        # remove the  grid lines
+        panel.grid.major.x = element_blank() ,
+        panel.grid.minor.x = element_blank(),
+        panel.grid.major.y = element_blank() ,
+        panel.grid.minor.y = element_blank()) +
+
+  coord_equal()
+
+
+
 
 #- density plot with ages, with C and B only------------------------------------
 # density plot with C and B only
@@ -1063,6 +1235,10 @@ t1 <- flatten_dbl(map(seq(1,100,5), ~rnorm(n= 10, mean = .x, sd = 0.0001)))
 hist(t1, breaks = 100)
 (t2 <- Ckmeans.1d.dp(t1, k = c(1,50), estimate.k = "BIC"))
 max(t2$cluster)
+
+# A planview of the OSL samples -------------------------------------------
+
+
 
 #----------------------------------------------------------------------------
 # mag sus plot over hearth
