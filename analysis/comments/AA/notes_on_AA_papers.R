@@ -3,6 +3,10 @@
 # C14 fails ---------------------------
 
 c14_fails <- readxl::read_excel(here::here('analysis/data/ages/C14 Fails.xlsx'), skip = 1)
+# c14_front_fails <- readxl::read_excel(here::here('analysis/data/ages/C14 Front Fails.xlsx'))
+# names(c14_front_fails) <- names(c14_fails)
+# c14_fails <-  c14_front_fails
+
 
 library(tidyverse)
 c14_fails_binned  <-
@@ -16,22 +20,24 @@ c14_fails %>%
   mutate(bin = ifelse(bin == "2-2.5", "1.5-2", bin)) %>%
   mutate(bin = ifelse(bin == "1.5-2", ">1.5", bin)) %>%
   mutate(bin = factor(bin, levels = c("0-0.5", "0.5-1", "1-1.5", ">1.5"))) %>%
+  mutate(sq_n = as.numeric(str_extract_all(Square, "\\d"))) %>%
+  filter(sq_n %in% 3:6) %>% # gets front squares only
   group_by(bin, `Failure (F)`) %>%
   tally() %>%
   mutate(perc = n / sum(n) * 100) %>%
-  filter(`Failure (F)` == "F")
+  spread(`Failure (F)`, n)
 
 
   ggplot(c14_fails_binned,
          aes(bin,
              perc)) +
     geom_col() +
-    geom_text(aes(y = perc - 2.5,
-                  label = str_glue('{round(perc, 0)} %')),
+    geom_text(aes(y = perc - 3,
+                  label = str_glue('n = {n}')),
               colour = "white",
               size = 5) +
     xlab("Depth below surface (m)") +
-    ylab("Percentage of charcoal samples that failed pretreatment") +
+    ylab("Percentage of charcoal samples that\ndid not survive pretreatment") +
     theme_minimal(base_size = 14)
 
   ggsave(here::here('analysis/figures/percentage_of_charcoal_samples_that_failed_pretreatment.png'),
