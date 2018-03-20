@@ -24,8 +24,9 @@ c14_fails %>%
   filter(sq_n %in% 3:6) %>% # gets front squares only
   group_by(bin, `Failure (F)`) %>%
   tally() %>%
-  mutate(perc = n / sum(n) * 100) %>%
-  spread(`Failure (F)`, n)
+  spread(`Failure (F)` , n) %>%
+  mutate(total = F + `<NA>`) %>%
+  mutate(perc = F / total * 100)
 
 
   ggplot(c14_fails_binned,
@@ -33,7 +34,7 @@ c14_fails %>%
              perc)) +
     geom_col() +
     geom_text(aes(y = perc - 3,
-                  label = str_glue('n = {n}')),
+                  label = str_glue('n = {total}')),
               colour = "white",
               size = 5) +
     xlab("Depth below surface (m)") +
