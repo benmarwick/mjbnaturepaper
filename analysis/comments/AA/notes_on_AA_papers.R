@@ -1,4 +1,54 @@
 
+
+# C14 fails ---------------------------
+
+c14_fails <- readxl::read_excel(here::here('analysis/data/ages/C14 Fails.xlsx'), skip = 1)
+
+library(tidyverse)
+c14_fails_binned  <-
+c14_fails %>%
+  mutate(bin = as.character(cut(c14_fails$`Depth m`,
+                   breaks=seq(from = 0,
+                              to = ceiling(max(c14_fails$`Depth m`)),
+                              by = 0.5)))) %>%
+  mutate(bin = str_replace_all(bin, "\\(|\\]", "")) %>%
+  mutate(bin = str_replace(bin, "\\,", "-")) %>%
+  mutate(bin = ifelse(bin == "2-2.5", "1.5-2", bin)) %>%
+  mutate(bin = ifelse(bin == "1.5-2", ">1.5", bin)) %>%
+  mutate(bin = factor(bin, levels = c("0-0.5", "0.5-1", "1-1.5", ">1.5"))) %>%
+  group_by(bin, `Failure (F)`) %>%
+  tally() %>%
+  mutate(perc = n / sum(n) * 100) %>%
+  filter(`Failure (F)` == "F")
+
+
+  ggplot(c14_fails_binned,
+         aes(bin,
+             perc)) +
+    geom_col() +
+    geom_text(aes(y = perc - 2.5,
+                  label = str_glue('{round(perc, 0)} %')),
+              colour = "white",
+              size = 5) +
+    xlab("Depth below surface (m)") +
+    ylab("Percentage of charcoal samples that failed pretreatment") +
+    theme_minimal(base_size = 14)
+
+  ggsave(here::here('analysis/figures/percentage_of_charcoal_samples_that_failed_pretreatment.png'),
+         h = 7, w = 7)
+
+
+
+# Create the response variable:
+library(survival)
+S <- Surv(
+  time = rep(0, nrow(c14_fails)),
+  time2 = c14_fails$`Depth m`,
+  event = c14_fails$`Failure (F)`)
+
+
+
+
 #- Supp table 15 chi-square -------------------------------------------------------------
 # Re-do the table of Supplementary Table 15
 
