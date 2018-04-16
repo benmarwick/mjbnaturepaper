@@ -56,7 +56,7 @@ S <- Surv(
 
 
 
-#- Supp table 15 chi-square -------------------------------------------------------------
+#- Supp table 15 chi-square -------------------
 # Re-do the table of Supplementary Table 15
 
 # because we used the back depths, and should have used the front depths
