@@ -1515,6 +1515,29 @@ return(phases)
 
 }
 
+
+#' front_phases
+#'
+#'
+#' @importFrom tibble frame_data
+#' @return data frame
+#' @export
+front_phases <- function(){
+
+  # these are copied from the published Bayesian OSL figure
+  phases_front <- tibble::frame_data(
+    ~phase, ~upper, ~lower,
+    1,     2.6,     4.6,
+    2,     2.15,    2.59,
+    3,     1.55,    2.149,
+    4,     0.95,    1.549,
+    5,     0.70,    0.949,
+    6,     -0.5,       0.69)
+
+  return(phases_front)
+
+}
+
 #' plot_granulometry_data
 #'
 #' @param prepared_geoarchaeology_data

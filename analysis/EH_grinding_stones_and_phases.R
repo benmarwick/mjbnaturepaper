@@ -100,6 +100,62 @@ length(GS_problematic) # 60
 phases <- mjbnaturepaper::phases()
 # make the bottom of phase 1 a bit lower to catch on artefact here
 phases$lower[1] <- 2.75
+phases$row <- 2 # back rows
+
+# get front phase depths
+front_phases <- mjbnaturepaper::front_phases()
+front_phases$row <- 4 # front rows
+
+all_phases <- rbind(phases, front_phases)
+all_phases_two <- all_phases %>% filter(phase == 2)
+
+# CC says The depths for Phase 2 for the B-E2 row is 1.9-2.3m and for squares BE 4-6 its 2.15-2.6m. It’s never really been worked out for the 1 and 3 rows. Let’s say half way between 2 and 4, so 2-2.45 say?
+
+# CC says: A histogram of plotted artefacts for Row 1 and compared to Row 2 would probably do it. We can draw lines around the dense lower band that way
+
+plotted_lithics_row_1_and_2 <-
+stone_artefacts_only %>%
+  separate(square,
+           into = c("col", "row"), sep = 1) %>%
+  filter(str_detect(row, "1|2|3|4|5|6")) %>%
+  filter(row != "23") %>%
+  filter(row != "C3") %>%
+  filter(row != "WC4")
+
+every_nth <- function(x, nth, empty = TRUE, inverse = FALSE)
+{
+  if (!inverse) {
+    if(empty) {
+      x[1:nth == 1] <- ""
+      x
+    } else {
+      x[1:nth != 1]
+    }
+  } else {
+    if(empty) {
+      x[1:nth != 1] <- ""
+      x
+    } else {
+      x[1:nth == 1]
+    }
+  }
+}
+
+custom_breaks <- seq(0, 3, 0.1)
+ggplot(plotted_lithics_row_1_and_2,
+       aes(round(depth_below_ground_surface,3))) +
+  geom_histogram(bins = 100) +
+  geom_vline(data = all_phases_two,
+             aes(xintercept = upper), colour = "red", size = 3) +
+  geom_vline(data = all_phases_two,
+             aes(xintercept = lower), colour = "green", size = 3) +
+  facet_wrap(~ row, ncol = 1) +
+  theme_minimal() +
+  xlab("Depth below ground surface (m)") +
+  scale_x_continuous(breaks = custom_breaks,
+                     labels = every_nth(custom_breaks, 5, inverse = TRUE)) +
+  ggtitle("Plotted lithics by excavation row")
+
 
 # --------------------------------------------------------------------------------
 
@@ -878,3 +934,19 @@ ggdraw() +
 
 ggsave("D:/My Documents/My UW/Research/1206 M2 excavation/1506 M2 excavation/data/plot_gs_percentage_by_phase.png", h = 7, w = 7)
 
+#------------------------------------------------------------------------------
+# I need to know the exact depths for:  GS 36 & GS 37
+
+# we can get GS37 no problem
+ebbes_artefacts_with_phases_and_ages %>%
+  filter(Artefact_no %in% c('GS 36', 'GS 37')) %>%
+  select(Artefact_no, depth_below_ground_surface)
+
+# but GS36 is problematic
+stone_artefacts_only %>%
+  filter(str_detect(Description, 'GS36')) %>%
+  select(Description, depth_below_ground_surface)
+
+gs_phases_with_depths_2 %>%
+  filter(Artefact.no. == 'GS 36') %>%
+  select(Artefact.no., Spit.Square, depth_below_ground_surface)
