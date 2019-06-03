@@ -9,7 +9,7 @@ COPY . /mjbnaturepaper
 RUN . /etc/environment \
   
   # install linux dependency 
-  && apt-get update \
+  #  && apt-get update \
   && apt-get install libgsl0-dev  -y \
   
   # install bioconductor pkg
