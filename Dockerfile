@@ -1,5 +1,5 @@
 # get the base image, this one has R, RStudio and pandoc
-FROM rocker/verse:3.3.2
+FROM rocker/verse
 
 # required
 MAINTAINER Ben Marwick <benmarwick@gmail.com>
@@ -9,7 +9,7 @@ COPY . /mjbnaturepaper
 RUN . /etc/environment \
   
   # install linux dependency 
-  #  && apt-get update \
+  && apt-get update \
   && apt-get install libgsl0-dev  -y \
   
   # install bioconductor pkg
