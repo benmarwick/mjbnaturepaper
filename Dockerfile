@@ -10,7 +10,7 @@ RUN . /etc/environment \
   
   # install linux dependency 
   && apt-get update \
-  && apt-get install libgsl0-dev  -y \
+  && apt-get install gsl-bin  -y \
   
   # install bioconductor pkg
   && R -e 'source("https://bioconductor.org/biocLite.R"); biocLite("IRanges")' \
