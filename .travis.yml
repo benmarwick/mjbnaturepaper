@@ -18,7 +18,7 @@ addons:
       - libgsl0-dev  # for MBESS
 
 script:
-  - Rscript -e "devtools::install()"
+  - Rscript -e "install.packages('devtools'); devtools::install()"
   - Rscript -e "rmarkdown::render('analysis/supplementary_information.Rmd')"
 
 warnings_are_errors: false
