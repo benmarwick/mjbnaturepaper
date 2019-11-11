@@ -149,10 +149,10 @@ B6_raw_materials_plot <-
            aes(width = depth_diff)) +
   scale_x_reverse(name = "Depth below surface (m)") +
   scale_fill_viridis(discrete = TRUE) +
-  coord_flip() +
   theme_minimal() +
-  guides(fill = guide_legend(nrow = 4, title.position = "bottom")) +
-  theme(aspect.ratio = 3,
+  guides(fill = guide_legend(nrow = 1,
+                             title.position = "bottom")) +
+  theme(aspect.ratio = 1/4,
         legend.position="bottom",
         legend.box = "horizontal")
 
@@ -188,9 +188,15 @@ B6_technology_plot <-
   scale_x_reverse(name = "") +
   scale_fill_viridis(discrete = TRUE) +
   coord_flip() +
-  theme_minimal()
+  theme_minimal() +
+  guides(fill = guide_legend(nrow = 4, title.position = "bottom")) +
+  theme(aspect.ratio = 3,
+        legend.position="bottom",
+        legend.box = "horizontal")
 
-
+grid::grid.draw(cbind(ggplot2::ggplotGrob(B6_raw_materials_plot),
+                      ggplot2::ggplotGrob(B6_technology_plot),
+                      size = "first"))
 
 
 

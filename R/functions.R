@@ -1288,10 +1288,6 @@ prepare_geoarchaeology_data <- function(cleaned_rotated_points_in_main_excavatio
                            d15N = d15N,
                            depth = depth ,
                            d13C_corrected = d13C_corrected,
-                           d13C_accuracy = d13C_accuracy,
-                           d13C_precision = d13C_precision,
-                           amount_corrected = amount_corrected,
-                           percent_C = percent_C,
                            analysis_date = analysis_date
   )
 
@@ -2633,9 +2629,6 @@ raw_materials_technology_plots <- function(B6_raw_materials,
       res = 300,
       #antialias = "cleartype")
       type="cairo")
-  grid::grid.draw(cbind(ggplot2::ggplotGrob(B6_raw_materials_plot),
-                        ggplot2::ggplotGrob(B6_technology_plot),
-                        size = "first"))
   dev.off()
 
 return(list(B6_raw_materials_plot_data = B6_raw_materials_plot_data,
