@@ -2716,5 +2716,38 @@ chi_sq_raw_material_by_phase <- function(plot_raw_materials_technology){
 }
 
 
+#' remove non-artefacts
+#'
+#' @param stone_artefacts_only
+#'
+#' @return
+#' @import tidyverse
+#' @export
+#'
+#' @examples
+#'
+remove_non_artefacts <- function(stone_artefacts_only) {
+
+  nonartefacts <- list.files("data/stone_artefact_data/", pattern = "nonartefacts", full.names = TRUE)
+  nonartefacts <- str_subset(nonartefacts, ".xlsx$")
+
+non_artefact_ids <-
+  map(nonartefacts,
+      ~readxl::read_excel(.x, col_names = F)) %>%
+    bind_rows() %>%
+    pull()
+
+stone_artefacts_only_removed <-
+  stone_artefacts_only %>%
+    dplyr::filter(!findn %in% non_artefact_ids)
+
+how_many_removed <-
+  nrow(stone_artefacts_only) - nrow(stone_artefacts_only_removed)
+
+message(paste0(how_many_removed, " non-artefacts were removed"))
+
+return(stone_artefacts_only_removed)
+
+}
 
 

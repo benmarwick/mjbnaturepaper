@@ -50,6 +50,10 @@ clean_points_in_main_excavation_area(rotated_points_in_main_excavation_area)
 # extract only stone artefacts and related things
 stone_artefacts_only <- 
 stone_artefacts(cleaned_rotated_points_in_main_excavation_area)
+
+# remove non-artefacts
+stone_artefacts_only <- 
+remove_non_artefacts(stone_artefacts_only)
 ```
 
 # Main paper figures and tables
