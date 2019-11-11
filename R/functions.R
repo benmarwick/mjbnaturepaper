@@ -2347,7 +2347,7 @@ plot_ages_and_artefacts <- function(osl_ages, c14_ages, stone_artefacts_only){
  dev.off()
 
 
-
+return(wanted_C14_and_OSL_plot_excluding)
 
 
 }

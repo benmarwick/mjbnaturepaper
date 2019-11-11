@@ -101,6 +101,25 @@ Hmisc::approxExtrap(phases_and_depths_b2$Depth,
 # - the lithic raw material and
 # - lithic technology types
 
+# compute polynomial regression
+wanted_both_methods_model <- lm(age ~
+                                  poly(depth_below_surface, 2),
+                                data = na.omit(depth_age_tbl))
+
+# interpolate ages using age model fit of both c14 and OSL
+# we can use this to get age of depths
+ages_of_xout <- tibble(depth = xout,
+   age = unname(predict(wanted_both_methods_model,
+                                 data.frame(depth_below_surface = xout))))
+
+ggplot(depth_age_tbl,
+       aes(age, depth_below_surface)) +
+  geom_point() +
+  geom_line(data = ages_of_xout,
+             aes(age, depth),
+            colour = "green")
+
+
 # from functions.R
 
 B6_raw_materials_technology_depths <-
