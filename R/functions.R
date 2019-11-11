@@ -1274,14 +1274,9 @@ prepare_geoarchaeology_data <- function(cleaned_rotated_points_in_main_excavatio
   # sample IDs, etc
   sample_ID <- dC13_data[ dC13_data_rows, ][[2]]
   sample_mass <- as.numeric(dC13_data[ dC13_data_rows, ][[9]])
-  d15N <- as.numeric(dC13_data[ dC13_data_rows, ][[15]])
-  d13C_accuracy <- as.numeric(dC13_data[ dC13_data_rows, ][[23]])
-  d13C_precision <- as.numeric(dC13_data[ dC13_data_rows, ][[24]])
-  amount_corrected <- as.numeric(dC13_data[ dC13_data_rows, ][[25]])
-  percent_C <- as.numeric(dC13_data[ dC13_data_rows, ][[19]])
-
+  d15N <- as.numeric(dC13_data[ dC13_data_rows, ][[16]])
   #  d13C corrected
-  d13C_corrected <- amount_corrected
+  d13C_corrected <- as.numeric(dC13_data[ dC13_data_rows, ][[27]])
   # col 6 is depth, remember that ground surface was 1 m on the tape
   depth <- as.numeric(dC13_data[ dC13_data_rows, ][[6]]) / 100 - 1
   # assign run numbers using date

@@ -4,7 +4,8 @@
 \alias{size_sorting_stat_test}
 \title{size sorting stat test}
 \usage{
-size_sorting_stat_test(spit_depths_B6_output, the_n = 10, p_value = 0.05)
+size_sorting_stat_test(spit_depths_B6_output, the_n = 10,
+  p_value = 0.05)
 }
 \value{
 a data frame

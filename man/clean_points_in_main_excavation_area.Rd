@@ -4,7 +4,8 @@
 \alias{clean_points_in_main_excavation_area}
 \title{clean_points_in_main_excavation_area}
 \usage{
-clean_points_in_main_excavation_area(rotated_points_in_main_excavation_area)
+
+  clean_points_in_main_excavation_area(rotated_points_in_main_excavation_area)
 }
 \arguments{
 \item{rotated_points_in_main_excavation_area}{}

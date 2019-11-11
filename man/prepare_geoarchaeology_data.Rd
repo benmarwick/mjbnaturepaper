@@ -4,7 +4,8 @@
 \alias{prepare_geoarchaeology_data}
 \title{prepare_geoarchaeology_data}
 \usage{
-prepare_geoarchaeology_data(cleaned_rotated_points_in_main_excavation_area)
+
+  prepare_geoarchaeology_data(cleaned_rotated_points_in_main_excavation_area)
 }
 \arguments{
 \item{cleaned_rotated_points_in_main_excavation_area}{}

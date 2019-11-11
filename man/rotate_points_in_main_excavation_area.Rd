@@ -4,7 +4,8 @@
 \alias{rotate_points_in_main_excavation_area}
 \title{rotate_points_in_main_excavation_area}
 \usage{
-rotate_points_in_main_excavation_area(extracted_points_in_main_excavation_area)
+
+  rotate_points_in_main_excavation_area(extracted_points_in_main_excavation_area)
 }
 \arguments{
 \item{extracted_points_in_main_excavation_area}{}
