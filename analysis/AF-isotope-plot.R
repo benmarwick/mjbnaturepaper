@@ -253,16 +253,19 @@ B6_raw_materials_technology_depths <-
 B6_raw_materials_technology_depths_ages <-
 B6_raw_materials_technology_depths %>%
   mutate(depth = as.character(round(depth_below_surface, 2))) %>%
-  left_join( d13C_depth_means_total_station_phases_chr %>%
-               select(depth, total_station, age, age_chr))
+  left_join( ages_of_xout %>% mutate(depth = as.character(depth) )) %>%
+  mutate(age_diff = c(0, diff(.$age)),
+         age_centre = c(age[1]/2, zoo::rollmean(age, 2)),
+         Quartzite = Qtztite,
+         Quartz = Qtz)
 
 
 B6_raw_materials_plot_data <-
-  B6_raw_materials_technology_depths %>%
+  B6_raw_materials_technology_depths_ages %>%
   gather(`Raw material`,
          value,
          -Spit,
-         -depth_below_surface,
+         -age,
          -`Volume Excavated`,
          -depth_diff,
          -x_centre) %>%
@@ -278,14 +281,13 @@ B6_raw_materials_plot_data <-
                                "Mica",
                                "Glass",
                                "`Gerowie Tuff`" ))  %>%
-  mutate(`Artefacts per Litre` = as.numeric(value)/`Volume Excavated`,
-         `Depth below surface (m)` = zoo::na.approx(round(depth_below_surface, 2)))
+  mutate(`Artefacts per Litre` = as.numeric(value)/`Volume Excavated`)
 
 library(viridis)
 
 B6_raw_materials_plot <-
   ggplot(B6_raw_materials_plot_data,
-         aes(x_centre,
+         aes(age,
              `Artefacts per Litre`,
              fill = `Raw material`)) +
   geom_bar(stat = "identity",
