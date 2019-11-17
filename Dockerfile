@@ -7,14 +7,14 @@ MAINTAINER Ben Marwick <benmarwick@gmail.com>
 COPY . /mjbnaturepaper
  # go into the repo directory
 RUN . /etc/environment \
-  
-  # install linux dependency 
+
+  # install linux dependency
   && apt-get update \
   && apt-get install gsl-bin  -y \
-  
+
   # install bioconductor pkg
-  && R -e 'source("https://bioconductor.org/biocLite.R"); biocLite("IRanges")' \
-  
+  && R -e 'install.packages("BiocManager"); BiocManager::install() biocLite("IRanges")' \
+
   # build this compendium package, get deps from MRAN
   # set date here manually
   && R -e "options(repos='https://mran.microsoft.com/snapshot/2017-07-20'); devtools::install('/mjbnaturepaper', dep=TRUE)" \

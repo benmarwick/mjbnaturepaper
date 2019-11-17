@@ -1,6 +1,6 @@
 
-
-dC13_data <- readxl::read_excel("analysis/data/geoarchaeology_data/Page_160404_CombinedResults final full.xlsx")
+library(here)
+dC13_data <- readxl::read_excel(here("analysis/data/geoarchaeology_data/Page_160404_CombinedResults final full.xlsx"))
 
 # clean_and_tidydC13_data
 
@@ -51,7 +51,7 @@ tape_depths <- data.frame(tape = 0:3,
 # need to interpolate to 5 cm to match with mag_sus_B2$Depth.Below.Surface..cm.
 
 # mag sus from KL
-mag_sus_B2 <- read.csv("analysis/data/geoarchaeology_data/MJB_Lowe2016.csv", stringsAsFactors = FALSE, fileEncoding="latin1")
+mag_sus_B2 <- read.csv(here("analysis/data/geoarchaeology_data/MJB_Lowe2016.csv"), stringsAsFactors = FALSE, fileEncoding="latin1")
 mag_sus_B2 <- mag_sus_B2[c(2:54), ]
 mag_sus_B2$Depth.Below.Surface..m <- as.numeric(mag_sus_B2$X)
 # remove the C3 stuff
@@ -82,7 +82,7 @@ d13C_depth_means_total_station <-
                    by = c('depth' = 'tape'))
 
 # get phases from B2, emailed from CC
-phases_and_depths <- readxl::read_excel("analysis/data/Phases and depths for all spits.xlsx")
+phases_and_depths <- readxl::read_excel(here("analysis/data/Phases and depths for all spits.xlsx"))
 
 phases_and_depths_b2 <-
 phases_and_depths %>%
@@ -131,7 +131,7 @@ d13C_depth_means_total_station %>%
 
 # apply phase-wise corrections
 volker_offsets <-
-  readxl::read_excel("analysis/data/geoarchaeology_data/Voelker-2016a Offsets.xlsx") %>%
+  readxl::read_excel(here("analysis/data/geoarchaeology_data/Voelker-2016a Offsets.xlsx")) %>%
   separate(`Age range`,
            into = c("start", "end"),
            sep = "-") %>%
@@ -139,7 +139,7 @@ volker_offsets <-
             parse_number)
 
 hare_offsets <-
-  readxl::read_excel("analysis/data/geoarchaeology_data/mmc1.xlsx", skip = 39)
+  readxl::read_excel(here("analysis/data/geoarchaeology_data/mmc1.xlsx"), skip = 39)
 
 hare_offsets_correction <-
   hare_offsets %>%
@@ -234,18 +234,7 @@ ggplot(d13C_depth_means_total_station_phases_chr,
   theme_minimal()
 
 
-library(fuzzyjoin)
-d13C_depth_means_total_station_phases_offset <-
-fuzzy_left_join(d13C_depth_means_total_station_phases,
-                volker_offsets,
-                by = c("age" = "end",
-                       "age" = "start"),
-                match_fun = list(`>=`, `<=`))
-
-
-
-
-
+# Lithic raw materials by age
 
 # from functions.R
 
@@ -258,6 +247,15 @@ B6_raw_materials_technology_depths <-
          x_centre = c(depth_below_surface[1]/2, zoo::rollmean(depth_below_surface, 2)),
          Quartzite = Qtztite,
          Quartz = Qtz)
+
+# add the ages on to the depths
+
+B6_raw_materials_technology_depths_ages <-
+B6_raw_materials_technology_depths %>%
+  mutate(depth = as.character(round(depth_below_surface, 2))) %>%
+  left_join( d13C_depth_means_total_station_phases_chr %>%
+               select(depth, total_station, age, age_chr))
+
 
 B6_raw_materials_plot_data <-
   B6_raw_materials_technology_depths %>%
