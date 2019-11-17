@@ -81,7 +81,7 @@ d13C_depth_means_total_station <-
                    tape_depths_interp,
                    by = c('depth' = 'tape'))
 
-# get phases from B2
+# get phases from B2, emailed from CC
 phases_and_depths <- readxl::read_excel("analysis/data/Phases and depths for all spits.xlsx")
 
 phases_and_depths_b2 <-
@@ -96,6 +96,7 @@ Hmisc::approxExtrap(phases_and_depths_b2$Depth,
                     xout = xout)) %>%
   mutate(phase = as.integer(y))
 
+#-----------------------------------------------
 # want:
 # - C isotopes
 # - the lithic raw material and
@@ -118,6 +119,132 @@ ggplot(depth_age_tbl,
   geom_line(data = ages_of_xout,
              aes(age, depth),
             colour = "green")
+
+# join ages onto isotope depths
+d13C_depth_means_total_station_phases <-
+d13C_depth_means_total_station %>%
+  left_join(b2_extrapolate %>%
+              mutate(depth = as.character(x))) %>%
+  left_join(ages_of_xout %>%
+              mutate(depth = as.character(depth))) %>%
+  mutate(age = age * 1000)
+
+# apply phase-wise corrections
+volker_offsets <-
+  readxl::read_excel("analysis/data/geoarchaeology_data/Voelker-2016a Offsets.xlsx") %>%
+  separate(`Age range`,
+           into = c("start", "end"),
+           sep = "-") %>%
+  mutate_at(vars(start, end),
+            parse_number)
+
+hare_offsets <-
+  readxl::read_excel("analysis/data/geoarchaeology_data/mmc1.xlsx", skip = 39)
+
+hare_offsets_correction <-
+  hare_offsets %>%
+  mutate(correction = hare_offsets$`Voelker-2016a (angiosperms)`[1] - `Voelker-2016a (angiosperms)`)
+
+# join on age at one decimal place
+d13C_depth_means_total_station_phases_chr <-
+d13C_depth_means_total_station_phases %>%
+  mutate(age_chr = as.character(round(age /1000, 1))) %>%
+  left_join(hare_offsets_correction %>%
+              select(`AGE (kyr)`, correction) %>%
+              mutate(age_chr = as.character(round(`AGE (kyr)`, 1)))) %>%
+  mutate(correction = zoo::na.approx(correction, rule = 2)) %>%
+  mutate(archy_corrected_d13 = mean_d13C_corrected - correction) %>%
+  mutate(phase = ifelse(age < 747, 7, phase))
+
+iso_limits <- c(-31, -25)
+
+phases_midpoints <-
+structure(list(start = c(65000, 51600, 40000, 26700, 9700, 602,
+                         150), end = c(52700, 40000, 28100, 13200, 8000, 599, -69)), class = c("tbl_df",
+                                                                                               "tbl", "data.frame"), row.names = c(NA, -7L))
+
+ggplot(d13C_depth_means_total_station_phases_chr,
+       aes(age,
+           archy_corrected_d13)) +
+  geom_line() +
+  theme_minimal() +
+  scale_x_reverse(labels = scales::comma,
+                  limits = c(70000, -1000),
+                  breaks = seq(70000, 0, -10000)) +
+  labs(y = expression(delta^13*C~V*`-`*PDB~('%')),
+       x = "Years BP") +
+
+  annotate("rect",
+           xmax = phases_midpoints$start[1],
+           xmin = phases_midpoints$end[1],
+           ymax = -Inf,
+           ymin = Inf,
+           # fill = viridis::viridis(7)[1],
+           alpha = 0.1) +
+
+  annotate("rect",
+           xmax = phases_midpoints$start[2],
+           xmin = phases_midpoints$end[2],
+           ymax = -Inf,
+           ymin = Inf,
+           # fill = viridis::viridis(7)[2],
+           alpha = 0.1) +
+
+  annotate("rect",
+           xmax = phases_midpoints$start[3] - 500,
+           xmin = phases_midpoints$end[3],
+           ymax = -Inf,
+           ymin = Inf,
+           # fill = viridis::viridis(7)[3],
+           alpha = 0.1) +
+
+  annotate("rect",
+           xmax = phases_midpoints$start[4],
+           xmin = phases_midpoints$end[4],
+           ymax = -Inf,
+           ymin = Inf,
+           # fill = viridis::viridis(7)[4],
+           alpha = 0.1) +
+
+  annotate("rect",
+           xmax = phases_midpoints$start[5],
+           xmin = phases_midpoints$end[5],
+           ymax = -Inf,
+           ymin = Inf,
+           # fill = viridis::viridis(7)[5],
+           alpha = 0.1) +
+
+  annotate("rect",
+           xmax = phases_midpoints$start[6],
+           xmin = phases_midpoints$end[7],
+           ymax = -Inf,
+           ymin = Inf,
+           #fill = viridis::viridis(7)[6],
+           alpha = 0.1)
+
+
+
+# boxplot
+library(ggbeeswarm)
+ggplot(d13C_depth_means_total_station_phases_chr,
+       aes(as.factor(phase),
+           archy_corrected_d13 )) +
+  geom_boxplot() +
+  geom_quasirandom() +
+  theme_minimal()
+
+
+library(fuzzyjoin)
+d13C_depth_means_total_station_phases_offset <-
+fuzzy_left_join(d13C_depth_means_total_station_phases,
+                volker_offsets,
+                by = c("age" = "end",
+                       "age" = "start"),
+                match_fun = list(`>=`, `<=`))
+
+
+
+
 
 
 # from functions.R

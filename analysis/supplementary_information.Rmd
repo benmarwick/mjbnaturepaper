@@ -51,6 +51,9 @@ clean_points_in_main_excavation_area(rotated_points_in_main_excavation_area)
 stone_artefacts_only <- 
 stone_artefacts(cleaned_rotated_points_in_main_excavation_area)
 
+saveRDS(cleaned_rotated_points_in_main_excavation_area,
+        "data/cleaned_rotated_points_in_main_excavation_area.rds")
+
 # remove non-artefacts
 stone_artefacts_only <- 
 remove_non_artefacts(stone_artefacts_only)
@@ -161,6 +164,11 @@ plot_ages_and_artefacts(osl_ages, c14_ages, stone_artefacts_only)
 
 depth_age_tbl <- 
   plot_ages_and_artefacts(osl_ages, c14_ages, stone_artefacts_only)
+
+saveRDS(depth_age_tbl,
+        "data/depth_age_tbl.rds")
+
+
 ```
 
 ## Extended Data Table 1

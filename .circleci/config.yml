@@ -9,10 +9,10 @@ jobs:
           command: docker info
       - run:
           name: Build the custom container
-          command: docker build -t $DOCKER_USER/archaeoglobe  .
+          command: docker build -t $DOCKER_USER/mjbnaturepaper  .
           no_output_timeout: 4h
       - deploy:
           name: Publish application to docker hub
           command: |
             docker login --username=$DOCKER_USER --password=$DOCKER_PASS
-            docker push $DOCKER_USER/archaeoglobe
+            docker push $DOCKER_USER/mjbnaturepaper
