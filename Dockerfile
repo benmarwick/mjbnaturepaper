@@ -10,7 +10,7 @@ RUN . /etc/environment \
 
   # install linux dependency
   && apt-get update \
-  && apt-get install gsl-bin  -y \
+  && apt-get install gsl-bin libgsl-dev -y \
 
   # install bioconductor pkg
   && R -e 'install.packages("BiocManager"); BiocManager::install(); BiocManager::install("IRanges")' \
