@@ -13,7 +13,7 @@ RUN . /etc/environment \
   && apt-get install gsl-bin  -y \
 
   # install bioconductor pkg
-  && R -e 'install.packages("BiocManager"); BiocManager::install(); biocLite("IRanges")' \
+  && R -e 'install.packages("BiocManager"); BiocManager::install(); BiocManager::install("IRanges")' \
 
   # build this compendium package, get deps from MRAN
   # set date here manually

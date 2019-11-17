@@ -234,7 +234,7 @@ ggplot(d13C_depth_means_total_station_phases_chr,
   theme_minimal()
 
 
-# Lithic raw materials by age
+# Lithic raw materials by age ---------------------------------------------------
 
 # from functions.R
 
@@ -267,7 +267,7 @@ B6_raw_materials_plot_data <-
          -Spit,
          -age,
          -`Volume Excavated`,
-         -depth_diff,
+         -age_diff,
          -x_centre) %>%
   filter(`Raw material` %in% c("Quartzite",
                                "Quartz",
@@ -292,8 +292,11 @@ B6_raw_materials_plot <-
              fill = `Raw material`)) +
   geom_bar(stat = "identity",
            position = "stack",
-           aes(width = depth_diff)) +
-  scale_x_reverse(name = "Depth below surface (m)") +
+           aes(width = age_diff)) +
+  scale_x_reverse(labels = scales::comma,
+                  limits = c(70, -10),
+                  breaks = seq(70, 0, -10),
+                  name = "Age (ka)") +
   scale_fill_viridis(discrete = TRUE) +
   theme_minimal() +
   guides(fill = guide_legend(nrow = 1,
@@ -302,16 +305,17 @@ B6_raw_materials_plot <-
         legend.position="bottom",
         legend.box = "horizontal")
 
+# Lithic techbnology by age ---------------------------------------------------
 
 
 B6_technology_plot_data <-
-  B6_raw_materials_technology_depths %>%
+  B6_raw_materials_technology_depths_ages %>%
   gather(`Technology`,
          value,
          -Spit,
-         -depth_below_surface,
+         -age,
          -`Volume Excavated`,
-         -depth_diff,
+         -age_diff,
          -x_centre) %>%
   filter(`Technology` %in% c("Thinning Flakes",
                              "Retouched" ,
@@ -321,22 +325,26 @@ B6_technology_plot_data <-
                              "`Convergent Flakes`",
                              "`Axe Flakes`",
                              "`Grindstones and Fragments`"))  %>%
-  mutate(`Artefacts per Litre` = as.numeric(value)/`Volume Excavated`,
-         `Depth below surface (m)` = zoo::na.approx(round(depth_below_surface, 2)))
+  mutate(`Artefacts per Litre` = as.numeric(value)/`Volume Excavated`)
 
 B6_technology_plot <-
   ggplot(B6_technology_plot_data,
-         aes(x_centre,
+         aes(age,
              `Artefacts per Litre`)) +
   geom_bar(stat = "identity",
-           aes(width = depth_diff,
+           aes(width = age_diff,
                fill = `Technology`)) +
   scale_x_reverse(name = "") +
   scale_fill_viridis(discrete = TRUE) +
-  coord_flip() +
+  scale_x_reverse(labels = scales::comma,
+                  limits = c(70, -10),
+                  breaks = seq(70, 0, -10),
+                  name = "Age (ka)") +
+  scale_fill_viridis(discrete = TRUE) +
   theme_minimal() +
-  guides(fill = guide_legend(nrow = 4, title.position = "bottom")) +
-  theme(aspect.ratio = 3,
+  guides(fill = guide_legend(nrow = 1,
+                             title.position = "bottom")) +
+  theme(aspect.ratio = 1/4,
         legend.position="bottom",
         legend.box = "horizontal")
 
