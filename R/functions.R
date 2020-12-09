@@ -304,14 +304,27 @@ clean_points_in_main_excavation_area <- function(rotated_points_in_main_excavati
 
   email <- c(75, 131, 185, 1409, 1725, 1666)
 
-  # another list from CC on 27 July 2016
-  jul_26_list <- readxl::read_excel("data/stone_artefact_data/nonartefacts.xlsx", col_names = FALSE)
-  jul_26_list_vec <- jul_26_list$X0
-  jul_26_list_HM_GS <- toupper(jul_26_list_vec[grepl("hm|gs", jul_26_list_vec)])
-  jul_26_list_L <- as.numeric(jul_26_list_vec[!grepl("hm|gs", jul_26_list_vec)])
+  # another list from CC on 27 July 2016 and 2019
+  # jul_26_list <- readxl::read_excel("data/stone_artefact_data/nonartefacts.xlsx", col_names = FALSE)
+  # jul_26_list_vec <- jul_26_list$...1
+  # jul_26_list_HM_GS <- toupper(jul_26_list_vec[grepl("hm|gs", jul_26_list_vec)])
+  # jul_26_list_L <- as.numeric(jul_26_list_vec[!grepl("hm|gs", jul_26_list_vec)])
 
-  # L numbers to remove
-  remove <- c(col1, col2, col3, col4, col5, col6, email, jul_26_list_L)
+  # and 2019 Excel sheet from CC
+  nonartefacts <- list.files("data/stone_artefact_data/", pattern = "nonartefacts", full.names = TRUE)
+  nonartefacts <- str_subset(nonartefacts, ".xlsx$")
+
+  non_artefact_ids <-
+    map(nonartefacts,
+        ~readxl::read_excel(.x, col_names = F)) %>%
+    bind_rows() %>%
+    pull()
+
+  nonartefacts_lithics <- as.numeric(non_artefact_ids[!grepl("hm|gs", non_artefact_ids)])
+  nonartefacts_HM_GS <- toupper(non_artefact_ids[grepl("hm|gs", non_artefact_ids)])
+
+ # L numbers to remove
+  remove <- c(col1, col2, col3, col4, col5, col6, email, nonartefacts_lithics)
 
   # delete the very lowest putting HM and ART
 
@@ -335,7 +348,7 @@ clean_points_in_main_excavation_area <- function(rotated_points_in_main_excavati
 
   remove_stuff <- c(remove_lithics,
                     remove_haematite,
-                    jul_26_list_HM_GS)
+                    nonartefacts_HM_GS)
 
   # do the actual removal
   ts_data_both_years_PFs <- ts_data_both_years_PFs %>%
@@ -365,7 +378,7 @@ clean_points_in_main_excavation_area <- function(rotated_points_in_main_excavati
 
   # go over each character column and remove leading spaces
   tmp <-  ts_data_both_years_PFs
-  ts_data_both_years_PFs <- dmap_if(ts_data_both_years_PFs,
+  ts_data_both_years_PFs <- purrrlyr::dmap_if(ts_data_both_years_PFs,
                                     is.character,
                                     function(i) gsub("^ ", "", i))
 

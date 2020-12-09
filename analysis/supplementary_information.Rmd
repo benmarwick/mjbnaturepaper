@@ -43,7 +43,7 @@ extract_points_in_main_excavation_area(combined_2012_and_2015_total_station_data
 rotated_points_in_main_excavation_area <- 
 rotate_points_in_main_excavation_area(points_in_main_excavation_area)
 
-# clean out spurious and duplicated points
+# clean out spurious and duplicated points and non-artefacts
 cleaned_rotated_points_in_main_excavation_area <- 
 clean_points_in_main_excavation_area(rotated_points_in_main_excavation_area)
 
@@ -51,12 +51,10 @@ clean_points_in_main_excavation_area(rotated_points_in_main_excavation_area)
 stone_artefacts_only <- 
 stone_artefacts(cleaned_rotated_points_in_main_excavation_area)
 
+
 saveRDS(cleaned_rotated_points_in_main_excavation_area,
         "data/cleaned_rotated_points_in_main_excavation_area.rds")
 
-# remove non-artefacts
-stone_artefacts_only <- 
-remove_non_artefacts(stone_artefacts_only)
 ```
 
 # Main paper figures and tables
@@ -88,9 +86,9 @@ raw_materials_technology_plots(B6_raw_materials, spit_depths_B6_output)
 # chi-sq for raw material by phase
 chi_sq_raw_material_by_phase_tbl <- chi_sq_raw_material_by_phase(plot_raw_materials_technology)
 
-# this creates the table as originally published, which we now know is wrong.
+# this creates the table as originally published, which we now know is wrong, and
+# was corrected in https://doi.org/10.1080/03122417.2018.1462884
 chisq.test(chi_sq_raw_material_by_phase_tbl)
-
 
 # These plots are arranged in inkscape to create the final figure EDF-4
 
