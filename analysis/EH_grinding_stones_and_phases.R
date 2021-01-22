@@ -344,11 +344,11 @@ ebbes_artefacts_with_phases <-
 
 mjb_phase_ages <-
   frame_data(~phase, ~start_up, ~start_lo, ~end_up,  ~end_lo,
-                1,     87410,    72960,     76600,    65440,
-                2,     68690,    61260,     55090,    50380,
-                3,     53980,    49160,     30110,    26000,
-                4,     28920,    24560,     14210,    12210,
-                5,     10530,    8850,      9020,     7080,
+                "1",     87410,    72960,     76600,    65440,
+                "2",     68690,    61260,     55090,    50380,
+                "3",     53980,    49160,     30110,    26000,
+                "4",     28920,    24560,     14210,    12210,
+                "5",     10530,    8850,      9020,     7080,
                 "6-7",     8180,     6090,      3140,     0)
 
 mjb_phase_ages$age_range <-
@@ -427,7 +427,7 @@ supp_tbl %>%
            depth_below_ground_surface  > 2 &
            `Spit/Square` == "E1/18"))
 
-=# write_csv(supp_tbl_joined, "supp_tbl_joined.csv")
+# write_csv(supp_tbl_joined, "supp_tbl_joined.csv")
 
 supp_tbl_joined %>%
   select(`Grinding stone number`, Phase, phase)
@@ -790,7 +790,7 @@ draw_panel_plot()
 
 # save it:
 pnas_col_width <- 87 # mm
-png("C:/Users/bmarwick/Desktop/fig2.png",
+png(here::here("analysis/figures/fig2.png"),
     width = pnas_col_width * 1.5,
     height = pnas_col_width * 1.5 * 1.7,
     units = "mm", res = 300)
@@ -805,9 +805,9 @@ dev.off()
 
 cleaned_rotated_points_in_main_excavation_area_GS <-
   cleaned_rotated_points_in_main_excavation_area %>%
-  filter(grepl("GS", cleaned_rotated_points_in_main_excavation_area$Description)) %>%
+  dplyr::filter(grepl("GS", cleaned_rotated_points_in_main_excavation_area$Description)) %>%
   group_by(Description) %>%
-  slice(1)
+  dplyr::slice(1)
 
 # compute phases
 library(fuzzyjoin)
@@ -835,7 +835,9 @@ cleaned_rotated_points_in_main_excavation_area_GS_phases %>%
 
 
 #------------------------------------------------------------------------------
-## can you give me a summarised list all the final artefact counts comprising both the 2012 and 2015 assemblages? I want to know the % of grinding stones compared with other lithic tools (I think it is around 4%)?
+## can you give me a summarised list all the final artefact counts comprising both the
+# 2012 and 2015 assemblages? I want to know the % of grinding stones compared with
+# other lithic tools (I think it is around 4%)?
 
 library(dplyr)
 stone_artefacts_only %>%
@@ -850,6 +852,14 @@ stone_artefacts_only %>%
   count(year, find) %>%
   mutate(percentage = round(n / sum(n) * 100, 2)) %>%
   arrange(year)
+
+# total number of GS are
+stone_artefacts_only %>%
+  filter(find == "GS") %>%
+  count()
+# 246
+
+
 
 
 ## Phases for 2015 plotted GS that you didn't analyse, GS 51-87

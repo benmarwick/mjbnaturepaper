@@ -1,0 +1,18 @@
+variable,explanation
+Description,Code entered into total station to label the point
+Easting,"Local grid easting relative to datum, recorded by total station"
+Northing,"Local grid northing, relative to datum, recorded by total station"
+Elevation,"Depth below datum, recorded by total station"
+year,Excavation year
+X,Computed coordinate
+Y,Computed coordinate
+Ynew,"Computed coordinate, used for plotting data"
+Xnew,Computed coordinate
+Xnew_flipped,"Computed coordinate, used for plotting data"
+type,"Type of total station point: PF, EL, OSL, etc., extracted from Description"
+square,"Excavation square containing the point, extracted from Description"
+spit,"Excavation spit containing the point, extracted from Description"
+cnr,"Excavation square corner for end level points, extracted from Description"
+find,"find type, extracted from Description"
+findn,"find number, extracted from Description"
+depth_below_ground_surface,"Computed coordinate, used for plotting data in section view"

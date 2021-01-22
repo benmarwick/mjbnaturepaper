@@ -21,7 +21,7 @@ knitr::opts_chunk$set(echo = FALSE,
 
 This document contains the R code used to generate the figures and statistical results that I contributed to
 
-Clarkson et al. XXXX 
+Clarkson, C., Z. Jacobs, B. Marwick, R. Fullagar, L. Wallis, M. Smith, R.G. Roberts, E. Hayes, K. Lowe, X. Carah, S.A. Florin, J. McNeil, D. Cox, L.J. Arnold, Q. Hua, J. Huntley, H.E.A. Brand, T. Manne, A. Fairbairn, J. Shulmeister, L. Lyle, M. Salinas, M. Page, K. Connell, G. Park, K. Norman, T. Murphy and C. Pardoe 2017 Human occupation of northern Australia by 65,000 years ago. _Nature_ 547:306–310. 
 
 ```{r prepare_data}
 # prepare data, if interactive, setwd to source doc
@@ -173,9 +173,49 @@ saveRDS(depth_age_tbl,
 
 Raw materials are predominantly quartzite, silcrete, exotic fine-grained quartzite, mudstone and dolerite (Extended Data Table 1)
 
-# Supplementary Information figures and tables:
+# Data delivery to GAC
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+```{r}
+cleaned_rotated_points_in_main_excavation_area %>% 
+  select(-code) %>% 
+readr::write_csv("data/Madjedbebe_2012_and_2015_cleaned_rotated_points_in_main_excavation_area.csv")
+
+# data dictionary
+Madjedbebe_2012_and_2015_data_dictionary <- 
+  tribble(~"variable",                    ~"explanation",
+           "Description"               ,   "Code entered into total station to label the point",  
+           "Easting"                   ,  "Local grid easting relative to datum, recorded by total station",
+           "Northing"                  ,   "Local grid northing, relative to datum, recorded by total station",    
+           "Elevation"                 ,   "Depth below datum, recorded by total station",   
+           "year"                      ,   "Excavation year",
+           "X"                         ,    "Computed coordinate",   
+           "Y"                         ,    "Computed coordinate",
+           "Ynew"                       ,   "Computed coordinate, used for plotting data",      
+           "Xnew"                       ,   "Computed coordinate",
+           "Xnew_flipped"              ,    "Computed coordinate, used for plotting data",
+           "type"                       ,    "Type of total station point: PF, EL, OSL, etc., extracted from Description",      
+           "square"                    ,     "Excavation square containing the point, extracted from Description",   
+             "spit"                     ,   "Excavation spit containing the point, extracted from Description", 
+           "cnr"                        ,    "Excavation square corner for end level points, extracted from Description", 
+           "find"                      ,     "find type, extracted from Description",
+           "findn"                      ,    "find number, extracted from Description",
+           "depth_below_ground_surface",     "Computed coordinate, used for plotting data in section view"
+  )
+
+readr::write_csv(Madjedbebe_2012_and_2015_data_dictionary,
+                 "data/Madjedbebe_2012_and_2015_cleaned_rotated_points_in_main_excavation_area_dictionary.csv")
+  
+```
+
+How many grind stones?
+
+```{r}
+cleaned_rotated_points_in_main_excavation_area %>% 
+  filter(find == "GS") %>% 
+  distinct(findn) %>% 
+  count()
+  # 81
+```
 
 
 
