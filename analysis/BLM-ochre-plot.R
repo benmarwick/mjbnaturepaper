@@ -10,6 +10,27 @@ stone_artefacts_only_one <-
                    depth_below_ground_surface = mean(depth_below_ground_surface))
 
 
+# BLM wants paired OSL and C14 ages, like we have in fig 1 of
+# https://static-content.springer.com/esm/art%3A10.1038%2Fs41467-020-14723-0/MediaObjects/41467_2020_14723_MOESM1_ESM.pdf
+# prepare data
+excluding <- c("Wk43605" , # pit feature
+               #"Wk43606",
+               #"Wk43607",
+               #"Wk43610",
+               #"Wk43604",
+               #"Wk43611",
+               #"OZT591",
+               "OZT593",
+               "OZR149"
+)
+
+# excluding <- NA
+
+squares <- "B3|B4|B5|C3|C4|C5|D3|D4|D5|E3|E4|E5"
+
+c14_ages_excludes <-  c14_ages[!grepl(paste0(excluding, collapse = "|"), c14_ages$Lab.ID), ]
+c14_ages_excludes <- c14_ages_excludes[grepl(paste0(squares, collapse = "|"), c14_ages_excludes$square), ]
+c14_ages_excludes$Bchron_Median_ka <- round(c14_ages_excludes$Bchron_Median /1000, 1)
 
 # determined by plotting row C end levels
 row_c <- c(2.4, 1.4, 0.4, -0.6, -1.6, -2.6, -3.6)
@@ -76,6 +97,15 @@ p <-
             bg.color = "white",
             bg.r = 0.1
              ) +
+  geom_shadowtext(data =  c14_ages_excludes,
+                  aes(Xnew_flipped,
+                      depth_below_ground_surface,
+                      label = paste0(Bchron_Median_ka, " cal kBP ")),
+                  size = size + 2,
+                  colour = "black",
+                  bg.color = "white",
+                  bg.r = 0.1
+  ) +
 
   scale_y_reverse(limits = c(3,0)) +
   theme_minimal() +
@@ -112,10 +142,11 @@ grid.draw(gt)
 # output to RStudio plot pane, then save as SVG
 
 # save copy
-png("figures/stone_artefacts_SW_section.png",
+png("figures/stone_artefacts_ages_SW_section_for_BLM.png",
     height = 1200,
     width = 1200*1.92,
-    res = 300)
+    res = 300
+    )
 # antialias = "cleartype")
 grid.draw(gt)
 dev.off()
