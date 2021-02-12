@@ -1839,7 +1839,7 @@ get_osl_ages <-  function(cleaned_rotated_points_in_main_excavation_area){
   # get total station point for MM1 of 2012
   mm1_2012 <- ts_data_both_years_PFs %>% filter(grepl("MM1", Description), year == "2012")
   # find lowest points
-  mm1_2012_lowest <- mm1_2012 %>% slice(which.min(Elevation))
+  mm1_2012_lowest <- mm1_2012 %>% dplyr::slice(which.min(Elevation))
 
   # set the depth of the first sample to the mm1 depth, and calibrate the rest of the osl sample depths to that
   # ZJ's depth values increase with depth, but our total station values decrease with increasing depth...
@@ -1868,24 +1868,59 @@ get_osl_ages <-  function(cleaned_rotated_points_in_main_excavation_area){
   # LEts try to extract the tables from her word doc, using
   # https://github.com/hrbrmstr/docxtractr
 
-  OSL_Data_tables_all_samples <- docxtractr::read_docx("data/ages/Data tables_all samples(250616)docx ZJ.docx")
+# 12 Feb 2021, Gillian Huntley observed that ZJ had not sent me the OSL ages that match
+# those in the paper! So I scrape the tables from the paper
 
-  OSL_Data_tables_all_samples_tables <- docx_extract_all_tbls(OSL_Data_tables_all_samples)
-  # combine tables into one big one
-  OSL_Data_tables_all_samples_table <- do.call(rbind, OSL_Data_tables_all_samples_tables)
+#  OSL_Data_tables_all_samples <- docxtractr::read_docx("data/ages/Data tables_all samples(250616)docx ZJ.docx")
+#
+#  OSL_Data_tables_all_samples_tables <- docxtractr::docx_extract_all_tbls(OSL_Data_tables_all_samples)
+#  # combine tables into one big one
+#  OSL_Data_tables_all_samples_table <- do.call(rbind, OSL_Data_tables_all_samples_tables)
+#  # fix names
+#  names(OSL_Data_tables_all_samples_table) <-
+#    c("Sample",
+#      "Depth below surface (m)",
+#      "Water (%)",
+#      "EDR_Beta",
+#      "EDR_Gamma",
+#      "EDR_Cosmic",
+#      "EDR_total",
+#      "De value (Gy)",
+#      "Number of grains",
+#      "OD (%)",
+#      "Age (ka)")
+#
+#
+# 12 Feb 2021, replace the above with the below:
+
+
+  OSL_Data_tables_all_samples_published <-
+    docxtractr::read_docx("data/ages/Pages from 41586_2017_BFnature22968_MOESM1_ESM.docx")
+
+  OSL_Data_tables_all_samples_tables_pub <-
+    docxtractr::docx_extract_all_tbls(OSL_Data_tables_all_samples_published)
+
   # fix names
-  names(OSL_Data_tables_all_samples_table) <-
-    c("Sample",
-      "Depth below surface (m)",
-      "Water (%)",
-      "EDR_Beta",
-      "EDR_Gamma",
-      "EDR_Cosmic",
-      "EDR_total",
-      "De value (Gy)",
-      "Number of grains",
-      "OD (%)",
-      "Age (ka)")
+  OSL_Data_tables_all_samples_tables_pub_lst <-
+    purrr::map(OSL_Data_tables_all_samples_tables_pub,
+        ~.x %>% set_names(nm =
+                            c("Sample",
+                              "Depth below surface (m)",
+                              "Water (%)",
+                              "EDR_Beta",
+                              "EDR_Gamma",
+                              "EDR_Cosmic",
+                              "EDR_total",
+                              "De value (Gy)",
+                              "Number of grains",
+                              "OD (%)",
+                              "Age (ka)")
+        ))
+
+  # combine tables into one big one
+  OSL_Data_tables_all_samples_table <- do.call(rbind, OSL_Data_tables_all_samples_tables_pub_lst)
+
+
 
   # get total station coods for these samples
   # make a col to match with

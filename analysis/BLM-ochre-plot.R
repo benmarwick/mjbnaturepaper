@@ -40,6 +40,7 @@ size = 0.5
 library(viridis)
 library(grid)
 library(shadowtext)
+library(ggrepel)
 
 p <-
   ggplot() +
@@ -74,37 +75,79 @@ p <-
              colour = "grey80",
              size = size)  +
 
+  # colours from https://coolors.co/264653-2a9d8f-e9c46a-f4a261-e76f51
+
   # show haematite pieces on top
   geom_point(data = stone_artefacts_only_one[stone_artefacts_only_one$find == "HM", ],
              aes(Xnew_flipped,
                  depth_below_ground_surface),
-             colour = "red",
-             size = size+1)  +
+             colour = "#e76f51",
+             size = size)  +
 
   # show grinding pieces on top
   geom_point(data = stone_artefacts_only_one[stone_artefacts_only_one$find == "GS", ],
              aes(Xnew_flipped,
                  depth_below_ground_surface),
-             colour = "blue",
-             size = size+0.5)  +
+             colour = "#264653",
+             size = size+0.5,
+             shape = 15)  +
 
-  geom_shadowtext(data =  osl_ages,
+  # show OSL ages
+  geom_text_repel(data =  osl_ages,
              aes(Xnew_flipped,
                  depth_below_ground_surface,
                  label = paste0(osl_age, " ka ")),
-            size = size + 2,
+            size = size + 2.5,
             colour = "black",
             bg.color = "white",
-            bg.r = 0.1
+            bg.r = 0.1,
+            force = 30,
+            min.segment.length = 0.3,
+            max.time = 5
              ) +
-  geom_shadowtext(data =  c14_ages_excludes,
+  # white halo on diamonds
+  geom_point(data =  osl_ages,
+             aes(Xnew_flipped,
+                 depth_below_ground_surface),
+             size = size + 3.5 + 0.5,
+             colour = "white",
+             shape = 18 # diamond
+  ) +
+  geom_point(data =  osl_ages,
+                  aes(Xnew_flipped,
+                      depth_below_ground_surface),
+                  size = size + 2.5,
+             colour = "#2a9d8f",
+             shape = 18 # diamond
+  ) +
+  # show C14 ages
+  geom_text_repel(data =  c14_ages_excludes,
                   aes(Xnew_flipped,
                       depth_below_ground_surface,
                       label = paste0(Bchron_Median_ka, " cal kBP ")),
-                  size = size + 2,
+                  size = size + 2.5,
                   colour = "black",
                   bg.color = "white",
-                  bg.r = 0.1
+                  bg.r = 0.1,
+                  force = 30,
+                  min.segment.length = 0.3,
+                  max.time = 5
+  ) +
+  # white halo on triangles
+  geom_point(data =  c14_ages_excludes,
+             aes(Xnew_flipped,
+                 depth_below_ground_surface),
+             size = size + 2.5 + 0.5,
+             colour = "white",
+             shape = 17 # triangle
+  ) +
+
+  geom_point(data =  c14_ages_excludes,
+                  aes(Xnew_flipped,
+                      depth_below_ground_surface),
+                  size = size + 2.5,
+             colour = "#f4a261",
+             shape = 17 # triangle
   ) +
 
   scale_y_reverse(limits = c(3,0)) +
@@ -119,12 +162,10 @@ p <-
   guides(colour = guide_legend(override.aes = list(size = 5))) +
   coord_equal()
 
-
 # add square labels
 row_c = c(2.4, 1.4, 0.4, -0.6, -1.6, -2.6, -3.6)
 nums = paste0("B", 7:2)
 row_mids <-  row_c[-length(row_c)] + diff(row_c)/2
-
 
 for(i in 1:length(row_mids)){
   p = p + annotation_custom(grob = textGrob(nums[i], gp=gpar(fontsize=10)),
@@ -150,3 +191,47 @@ png("figures/stone_artefacts_ages_SW_section_for_BLM.png",
 # antialias = "cleartype")
 grid.draw(gt)
 dev.off()
+dev.off()
+
+# save copy
+svg("figures/stone_artefacts_ages_SW_section_for_BLM.svg",
+    height = 1200,
+    width = 1200*1.92
+)
+# antialias = "cleartype")
+grid.draw(gt)
+dev.off()
+dev.off()
+
+
+
+# GH says some OSL ages are different
+# I compared stuff in R to published SI and see these different
+# me vs SI
+# SW7C 91.2 vs 79
+# SW4C 59.2 vs 62.7
+# SW3C 60 vs 64.0
+# NW14 67.8 vs 62.8
+# SW13A 64.5 vs 62.6
+# SW2C 68.8 vs 64.9
+# NW13 60.3 vs 58.2
+# NW12 56.9 vs 55.5
+# SW11A 63.8 vs 63.4
+# NW11 54.2 vs 52.6
+# SW10A  55.3 vs 55.3
+# NW15 50.3 vs 48.4
+# NW10  46.4 vs 43.8
+# SW8A 40.8 vs 42.8
+# ... etc looks like ZJ sent me the not-final version of the published ages
+
+
+
+
+
+
+
+
+
+
+
+
