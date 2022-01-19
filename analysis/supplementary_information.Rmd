@@ -24,18 +24,26 @@ This document contains the R code used to generate the figures and statistical r
 Clarkson, C., Z. Jacobs, B. Marwick, R. Fullagar, L. Wallis, M. Smith, R.G. Roberts, E. Hayes, K. Lowe, X. Carah, S.A. Florin, J. McNeil, D. Cox, L.J. Arnold, Q. Hua, J. Huntley, H.E.A. Brand, T. Manne, A. Fairbairn, J. Shulmeister, L. Lyle, M. Salinas, M. Page, K. Connell, G. Park, K. Norman, T. Murphy and C. Pardoe 2017 Human occupation of northern Australia by 65,000 years ago. _Nature_ 547:306–310. 
 
 ```{r prepare_data}
-# prepare data, if interactive, setwd to source doc
+# prepare data, if interactive, setwd to source file location
+
+# before running library(mjbnaturepaper):
+
+# remotes::install_github("matherion/userfriendlyscience")
+# BiocManager::install("IRanges")
+# remotes::install_github("benmarwick/mjbnaturepaper")
+
 library(mjbnaturepaper)
+
 library(tidyverse)
 
-# read in from raw data
+# read in from raw data, setwd to source file location
 total_station_data_2015 <- read_2015_total_station_data("data/total_station_csv_2015")
 total_station_data_2012 <- read_2012_total_station_data("data/total_station_csv_2012")
 
 # combine both years
 combined_2012_and_2015_total_station_data <- combine_2012_and_2015_total_station_data(total_station_data_2012,
                                          total_station_data_2015)
-# excude points not in excavation
+# exclude points not in excavation
 points_in_main_excavation_area <- 
 extract_points_in_main_excavation_area(combined_2012_and_2015_total_station_data)
 
@@ -206,17 +214,6 @@ readr::write_csv(Madjedbebe_2012_and_2015_data_dictionary,
                  "data/Madjedbebe_2012_and_2015_cleaned_rotated_points_in_main_excavation_area_dictionary.csv")
   
 ```
-
-How many grind stones?
-
-```{r}
-cleaned_rotated_points_in_main_excavation_area %>% 
-  filter(find == "GS") %>% 
-  distinct(findn) %>% 
-  count()
-  # 81
-```
-
 
 
 ```{r}
