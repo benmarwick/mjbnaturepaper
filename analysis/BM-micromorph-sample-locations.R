@@ -1,12 +1,11 @@
+# paper with maps etc. http://faculty.washington.edu/bmarwick/PDFs/Clarkson_Jacobs_Marwick_2017.pdf
+
+library(tidyverse)
+library(mjbnaturepaper) # remotes::install_github("benmarwick/mjbnaturepaper")
+
+# run code in the supplementary_information.Rmd up to around line 65
 
 library(plotly)
-
-plot_ly(type = "scatter3d",
-        x = mtcars$mpg,
-        y = mtcars$wt,
-        z = mtcars$hp,
-        color = mtcars$cyl,
-        mode = "markers")
 
 mjb_geoarch_plotting <-
   cleaned_rotated_points_in_main_excavation_area %>%
