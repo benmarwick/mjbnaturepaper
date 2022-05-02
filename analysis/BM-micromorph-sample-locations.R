@@ -7,6 +7,9 @@ library(mjbnaturepaper) # remotes::install_github("benmarwick/mjbnaturepaper")
 
 library(plotly)
 
+cleaned_rotated_points_in_main_excavation_area$Description_sq_sp <-
+  gsub("^[[:print:]]{1,2}_|_[A-Z0-9]+$", "", cleaned_rotated_points_in_main_excavation_area$Description)
+
 mjb_geoarch_plotting <-
   cleaned_rotated_points_in_main_excavation_area %>%
   mutate(mm = str_detect(Description, "_MM"))
@@ -30,6 +33,7 @@ mjb_geoarch_plotting_mm_only <-
 
   # non-equi join (join by range) to add phase information to depths
 
+library(fuzzyjoin)
   mjb_geoarch_plotting_with_phases_front_phase <-
     mjb_geoarch_plotting_with_phases %>%
     filter(exc_loc == 'front') %>%
@@ -99,5 +103,16 @@ htmlwidgets::saveWidget(p, "figures/mm-sample-locations-with-phases.html")
            exc_row,
            exc_loc,
            phase)
+
+# looking at the rock mass and counts from squares c2 and c5
+mjb_geoarch_plotting_with_phases_c2_c5 <-
+  mjb_geoarch_plotting_with_phases %>%
+    filter(square %in% c("C2", "C5")) %>%
+  select(square, spit, phase) %>%
+  distinct_all()
+
+write.csv(mjb_geoarch_plotting_with_phases_c2_c5,
+          here::here("analysis/data/geoarchaeology_data/mjb_geoarch_plotting_with_phases_c2_c5.csv"))
+
 
 
